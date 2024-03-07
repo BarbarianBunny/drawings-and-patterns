@@ -21,7 +21,7 @@ export default makeScene2D(function* (view) {
   //#region Constants and References
   const freeRoot = createRef<Rect>();
 
-  const y: number = 0; // Starting y position
+  const y: number = -500; // Starting y position
   const m: number = 100; // Length Modifier
   const t: number = 1; // Time in seconds
   const tF: TimingFunction = linear;
@@ -29,7 +29,7 @@ export default makeScene2D(function* (view) {
   const rows: Line[][] = [];
   const pointsList: PossibleVector2<number>[][] = [];
   const positions: PossibleVector2<number>[][] = [];
-  positions[0] = [[0, 0]];
+  positions[0] = [[0, y]];
   //#endregion
 
   //#region Create Functions
@@ -67,7 +67,7 @@ export default makeScene2D(function* (view) {
   //#endregion
 
   //#region Loop
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 8; i++) {
     let lines: Line[] = [];
     const startPositions = positions[i];
     // Create/Add Lines at each position with 4 points at 0
@@ -89,34 +89,8 @@ export default makeScene2D(function* (view) {
         )
       )
     );
-    // Consolidate connecting lines
-    // compare line positions, if they're m apart then they're next to eachother
-    // group adjacent lines by position.
-    // for each group sum x positions and average by group.length
-    // create a new line to replace them using the average x and exact y,
-    // taking 2 points from the front of the first line and 2 off the last of the group lines
 
-    // if (line.parent != null && line.x() + m == nextLine.x()) {}
-    // if (i == 1) {
-    //   logger.info("parsedPoints")
-    //   logger.info(lines[0].parsedPoints().toString())
-    //   lines[0].x(lines[0].x() + m)
-    //   lines[0].points([
-    //           lines[0].parsedPoints()[0].addX(-m),
-    //           lines[0].parsedPoints()[1].addX(-m),
-    //           lines[1].parsedPoints()[2].addX(m),
-    //           lines[1].parsedPoints()[3].addX(m),
-    //         ])
-    //   logger.info(lines[0].parsedPoints().toString())
-    //   logger.info("Parent")
-    //   logger.info((null != lines[1].parent()).toString())
-    //   lines[1].remove()
-    //   logger.info((null == lines[1].parent()).toString())
-    // }
-    // const newPoints = [];
-    // const numLines = 0;
-    // const xPositions = [];
-    // const yPosition = 0;
+    // Consolidate Adjacent Lines
     for (let j = 0; j < lines.length - 1; j++) {
       const line = lines[j];
       const lineRx = line.x() + line.parsedPoints()[3].x;
@@ -175,54 +149,4 @@ export default makeScene2D(function* (view) {
     });
   }
   //#endregion
-  // points position relative to parent.position
-  // Line 0
-  // Points 0
-  // [[0, 0]]
-  // Transition Points 0
-  // [[0, 0], [0, 0]]
-  // Points 1
-  // [[-m, 0], [m, 0]]
-  // Transition Points 1
-  // [[-m, 0], [-m, 0], [m, 0], [m, 0]]
-  // Points 2
-  // [[-m, m], [-m, 0], [m, 0], [m, m]]
-
-  // Without transitions
-  // Line 0
-  // Points 0
-  // [[0, 0], [0, 0], [0, 0], [0, 0]]
-  // Points 1
-  // [[-m, 0], [-m, 0], [m, 0], [m, 0]]
-  // Check lines for matching ends, consolidate
-  // Points 2
-  // [[-m, m], [-m, 0], [m, 0], [m, m]]
-
-  // test
-  // const testLine = createRef<Line>();
-  // view.add(
-  //   <Line
-  //     ref={testLine}
-  //     position={[0, 0]}
-  //     points={[
-  //       [-100, 0],
-  //       [-100, 0],
-  //       [100, 0],
-  //       [100, 0],
-  //     ]}
-  //     stroke={"blue"}
-  //     lineWidth={20}
-  //     lineCap={"round"}
-  //     radius={0.1}
-  //   />
-  // );
-  // yield* testLine().points(
-  //   [
-  //     [-100, 100],
-  //     [-100, 0],
-  //     [100, 0],
-  //     [100, 100],
-  //   ],
-  //   2
-  // );
 });
