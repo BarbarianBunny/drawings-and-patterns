@@ -12,6 +12,7 @@ import {
   loopUntil,
   makeRef,
   useLogger,
+  waitFor,
 } from "@motion-canvas/core";
 import { motionBlack, motionDarkGrey } from "../utils";
 
@@ -66,8 +67,8 @@ export default makeScene2D(function* (view) {
   //#endregion
 
   //#region Loop
-  for (let i = 0; i < 1; i++) {
-    const lines: Line[] = [];
+  for (let i = 0; i < 2; i++) {
+    let lines: Line[] = [];
     const startPositions = positions[i];
     // Create/Add Lines at each position with 4 points at 0
     startPositions.forEach((pos, index) => {
@@ -89,32 +90,69 @@ export default makeScene2D(function* (view) {
       )
     );
     // Consolidate connecting lines
-    for (let i = 0; i < lines.length - 1; i++) {
-      const line = lines[i];
-      const nextLine = lines[i + 1];
-      if (line.points()[-1] == nextLine.points()[0]) {
+    // compare line positions, if they're m apart then they're next to eachother
+    // group adjacent lines by position.
+    // for each group sum x positions and average by group.length
+    // create a new line to replace them using the average x and exact y,
+    // taking 2 points from the front of the first line and 2 off the last of the group lines
+
+    // if (line.parent != null && line.x() + m == nextLine.x()) {}
+    // if (i == 1) {
+    //   logger.info("parsedPoints")
+    //   logger.info(lines[0].parsedPoints().toString())
+    //   lines[0].x(lines[0].x() + m)
+    //   lines[0].points([
+    //           lines[0].parsedPoints()[0].addX(-m),
+    //           lines[0].parsedPoints()[1].addX(-m),
+    //           lines[1].parsedPoints()[2].addX(m),
+    //           lines[1].parsedPoints()[3].addX(m),
+    //         ])
+    //   logger.info(lines[0].parsedPoints().toString())
+    //   logger.info("Parent")
+    //   logger.info((null != lines[1].parent()).toString())
+    //   lines[1].remove()
+    //   logger.info((null == lines[1].parent()).toString())
+    // }
+    // const newPoints = [];
+    // const numLines = 0;
+    // const xPositions = [];
+    // const yPosition = 0;
+    for (let j = 0; j < lines.length - 1; j++) {
+      const line = lines[j];
+      const lineRx = line.x() + line.parsedPoints()[3].x;
+      const nextLine = lines[j + 1];
+      const nextLineLx = nextLine.x() + nextLine.parsedPoints()[0].x;
+
+      const notRemoved = line.parent() != null;
+      const pointsTouch = lineRx == nextLineLx;
+
+      if (notRemoved && pointsTouch) {
+        const lineLx = line.x() + line.parsedPoints()[0].x;
+        const nextLineRx = nextLine.x() + nextLine.parsedPoints()[3].x;
+        const centerX = (lineLx + nextLineRx) / 2;
+        const widthX = nextLineRx - lineLx;
+
+        nextLine.x(centerX);
         nextLine.points([
-          line.points()[0],
-          line.points()[1],
-          nextLine.points()[2],
-          nextLine.points()[3],
+          [-widthX / 2, 0],
+          [-widthX / 2, 0],
+          [widthX / 2, 0],
+          [widthX / 2, 0],
         ]);
         line.remove();
       }
-      logger.info(line.parent().toString());
     }
-    // filter out lines without parents because they've been removed
-    // lines.filter((line, index, arr) => )
+    lines = lines.filter((line) => line.parent() != null);
 
     // [[-m, 0], [-m, 0], [m, 0], [m, 0]] -> [[-m, m], [-m, 0], [m, 0], [m, m]]
     yield* all(
       ...lines.map((line) =>
         line.points(
           [
-            [-m, m],
-            [-m, 0],
-            [m, 0],
-            [m, m],
+            line.parsedPoints()[0].addY(m),
+            line.parsedPoints()[1],
+            line.parsedPoints()[2],
+            line.parsedPoints()[3].addY(m),
           ],
           t,
           tF
@@ -124,8 +162,8 @@ export default makeScene2D(function* (view) {
     // create next start positions
     positions[i + 1] = [];
     lines.forEach((line, index, arr) => {
-      const posX = line.position.x()
-      const posY = line.position.y()
+      const posX = line.position.x();
+      const posY = line.position.y();
       positions[i + 1].push([
         posX + line.parsedPoints()[0].x,
         posY + line.parsedPoints()[0].y,
