@@ -1,11 +1,22 @@
 import { Layout, Line, Rect, makeScene2D } from "@motion-canvas/2d";
 import {
+  Color,
   Logger,
   PossibleVector2,
   TimingFunction,
   all,
   chain,
   createRef,
+  easeInCirc,
+  easeInCubic,
+  easeInExpo,
+  easeInQuad,
+  easeInQuint,
+  easeOutCirc,
+  easeOutCubic,
+  easeOutExpo,
+  easeOutQuart,
+  easeOutQuint,
   isType,
   linear,
   loop,
@@ -20,11 +31,15 @@ export default makeScene2D(function* (view) {
   const logger = useLogger();
   //#region Constants and References
   const freeRoot = createRef<Rect>();
+  const lineColor = new Color("2a839a");
 
-  const y: number = -500; // Starting y position
+  const y: number = 0; // Starting y position
   const m: number = 100; // Length Modifier
   const t: number = 1; // Time in seconds
-  const tF: TimingFunction = linear;
+  const scaleM: number = 0.98;
+  const tFx: TimingFunction = easeOutExpo;
+  const tFy: TimingFunction = easeInCirc;
+  const tFs: TimingFunction = linear;
 
   const rows: Line[][] = [];
   const pointsList: PossibleVector2<number>[][] = [];
@@ -44,7 +59,7 @@ export default makeScene2D(function* (view) {
         ref={makeRef(lines, index)}
         position={position}
         points={points}
-        stroke={"blue"}
+        stroke={lineColor}
         lineCap={"round"}
         lineWidth={20}
         radius={0.1}
@@ -63,7 +78,7 @@ export default makeScene2D(function* (view) {
   //#endregion
 
   //#region Add initial Layout
-  view.add(<Layout ref={freeRoot}></Layout>);
+  view.add(<Layout ref={freeRoot} scale={[1, 1]}></Layout>);
   //#endregion
 
   //#region Loop
@@ -74,7 +89,14 @@ export default makeScene2D(function* (view) {
     startPositions.forEach((pos, index) => {
       freeRoot().add(createLine(lines, index, pos, createPoints()));
     });
+
     // [[0, 0], [0, 0], [0, 0], [0, 0]] -> [[-m, 0], [-m, 0], [m, 0], [m, 0]]
+    yield freeRoot().scale(
+      [freeRoot().scale.x() * scaleM, freeRoot().scale.y() * scaleM],
+      t,
+      tFs
+    );
+    yield freeRoot().y(freeRoot().y() - (m / 4) * scaleM, t, tFs);
     yield* all(
       ...lines.map((line) =>
         line.points(
@@ -85,7 +107,7 @@ export default makeScene2D(function* (view) {
             [m, 0],
           ],
           t,
-          tF
+          tFx
         )
       )
     );
@@ -119,6 +141,12 @@ export default makeScene2D(function* (view) {
     lines = lines.filter((line) => line.parent() != null);
 
     // [[-m, 0], [-m, 0], [m, 0], [m, 0]] -> [[-m, m], [-m, 0], [m, 0], [m, m]]
+    yield freeRoot().scale(
+      [freeRoot().scale.x() * scaleM, freeRoot().scale.y() * scaleM],
+      t,
+      tFs
+    );
+    yield freeRoot().y(freeRoot().y() - (m / 4) * scaleM, t, tFs);
     yield* all(
       ...lines.map((line) =>
         line.points(
@@ -129,7 +157,7 @@ export default makeScene2D(function* (view) {
             line.parsedPoints()[3].addY(m),
           ],
           t,
-          tF
+          tFy
         )
       )
     );
