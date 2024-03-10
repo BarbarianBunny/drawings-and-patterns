@@ -1,10 +1,16 @@
-import { Layout, Line, Rect, makeScene2D } from "@motion-canvas/2d";
+import { Layout, Line, Rect, Scene2D, makeScene2D } from "@motion-canvas/2d";
 import {
-  Color, PossibleVector2,
+  Color,
+  PossibleVector2,
+  ThreadGenerator,
   TimingFunction,
-  all, createRef,
-  easeInCirc, easeOutExpo, linear, makeRef,
-  useLogger
+  all,
+  createRef,
+  easeInCirc,
+  easeOutExpo,
+  linear,
+  makeRef,
+  useLogger,
 } from "@motion-canvas/core";
 
 export default makeScene2D(function* (view) {
@@ -16,7 +22,10 @@ export default makeScene2D(function* (view) {
   const y: number = 0; // Starting y position
   const m: number = 100; // Length Modifier
   const t: number = 1; // Time in seconds
-  const scaleM: number = 0.98;
+  const scalePos: number = 1;
+  let scaleScale: number = 0.95;
+  const loops: number = 2 ** 7;
+
   const tFx: TimingFunction = easeOutExpo;
   const tFy: TimingFunction = easeInCirc;
   const tFs: TimingFunction = linear;
@@ -62,7 +71,35 @@ export default makeScene2D(function* (view) {
   //#endregion
 
   //#region Loop
-  for (let i = 0; i < 8; i++) {
+  function* changeRoot(lines: Line[] = [], i: number): ThreadGenerator {
+    if (freeRoot().y() > -440) {
+      yield freeRoot().y(freeRoot().y() - (m / 4) * scalePos, t, tFs);
+    }
+    if (freeRoot().y() < -390) {
+      if (i < 14) {
+        scaleScale = 0.956;
+      } else if (i < 24) {
+        scaleScale = 0.978;
+      } else if (i < 32) {
+        scaleScale = 0.982;
+      } else if (i < 48) {
+        scaleScale = 0.987;
+      } else if (i < 64) {
+        scaleScale = 0.992;
+      } else if (i < 96) {
+        scaleScale = 0.9937;
+      } else if (i < 128) {
+        scaleScale = 0.9955;
+      }
+      yield freeRoot().scale(
+        [freeRoot().scale.x() * scaleScale, freeRoot().scale.y() * scaleScale],
+        t,
+        tFs
+      );
+    }
+  }
+
+  for (let i = 0; i < loops; i++) {
     let lines: Line[] = [];
     const startPositions = positions[i];
     // Create/Add Lines at each position with 4 points at 0
@@ -71,12 +108,7 @@ export default makeScene2D(function* (view) {
     });
 
     // [[0, 0], [0, 0], [0, 0], [0, 0]] -> [[-m, 0], [-m, 0], [m, 0], [m, 0]]
-    yield freeRoot().scale(
-      [freeRoot().scale.x() * scaleM, freeRoot().scale.y() * scaleM],
-      t,
-      tFs
-    );
-    yield freeRoot().y(freeRoot().y() - (m / 4) * scaleM, t, tFs);
+    yield* changeRoot(lines, i);
     yield* all(
       ...lines.map((line) =>
         line.points(
@@ -121,12 +153,7 @@ export default makeScene2D(function* (view) {
     lines = lines.filter((line) => line.parent() != null);
 
     // [[-m, 0], [-m, 0], [m, 0], [m, 0]] -> [[-m, m], [-m, 0], [m, 0], [m, m]]
-    yield freeRoot().scale(
-      [freeRoot().scale.x() * scaleM, freeRoot().scale.y() * scaleM],
-      t,
-      tFs
-    );
-    yield freeRoot().y(freeRoot().y() - (m / 4) * scaleM, t, tFs);
+    yield* changeRoot(lines, i);
     yield* all(
       ...lines.map((line) =>
         line.points(
