@@ -1,31 +1,11 @@
 import { Layout, Line, Rect, makeScene2D } from "@motion-canvas/2d";
 import {
-  Color,
-  Logger,
-  PossibleVector2,
+  Color, PossibleVector2,
   TimingFunction,
-  all,
-  chain,
-  createRef,
-  easeInCirc,
-  easeInCubic,
-  easeInExpo,
-  easeInQuad,
-  easeInQuint,
-  easeOutCirc,
-  easeOutCubic,
-  easeOutExpo,
-  easeOutQuart,
-  easeOutQuint,
-  isType,
-  linear,
-  loop,
-  loopUntil,
-  makeRef,
-  useLogger,
-  waitFor,
+  all, createRef,
+  easeInCirc, easeOutExpo, linear, makeRef,
+  useLogger
 } from "@motion-canvas/core";
-import { motionBlack, motionDarkGrey } from "../utils";
 
 export default makeScene2D(function* (view) {
   const logger = useLogger();
