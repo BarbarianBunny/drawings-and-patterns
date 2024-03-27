@@ -7,6 +7,7 @@ export default defineConfig({
     motionCanvas({
       project: [
         "./src/projects/pyramids/pyramids.ts",
+        "./src/projects/circle-grids/circle-grids.ts",
       ],
     }),
     ffmpeg(),
