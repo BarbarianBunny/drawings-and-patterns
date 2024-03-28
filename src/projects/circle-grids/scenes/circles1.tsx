@@ -189,11 +189,11 @@ class CirclePattern {
 
   *animateInnerDots(): ThreadGenerator {
     this.logger.info(this.outerDots.toString());
-    const left = this.outerDots.filter((dot) => dot.x() < 0.1 * this.spacing);
+    const left = this.outerDots.filter((dot) => dot.x() < 0);
     const topLeft = this.outerDots.filter(
-      (dot) => dot.y() < -dot.x() + 0.1 * this.spacing
+      (dot) => dot.y() < -dot.x()
     );
-    const top = this.outerDots.filter((dot) => dot.y() < 0.1 * this.spacing);
+    const top = this.outerDots.filter((dot) => dot.y() < 0);
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     this.logger.info(left.length.toString());
     this.logger.info(topLeft.length.toString());
