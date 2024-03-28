@@ -27,6 +27,7 @@ import {
 export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
+  const spacing = 10;
   const page = createRef<Layout>();
   const grid = createRef<Grid>();
   const circle1 = new CirclePattern(1, logger);
@@ -40,13 +41,17 @@ export default makeScene2D(function* (view) {
         lineWidth={0.2}
         width={"100%"}
         height={"100%"}
-        spacing={10}
+        spacing={spacing}
         start={0}
         end={1}
       ></Grid>
     </Layout>
   );
-  page().absolutePosition(page().absolutePosition().add([-50, -50]));
+  page().absolutePosition(
+    page()
+      .absolutePosition()
+      .add([-5 * spacing, -5 * spacing])
+  );
   // Animate 1st Circle dot creation
   page().add(circle1.pattern());
 
@@ -57,8 +62,12 @@ export default makeScene2D(function* (view) {
 class CirclePattern {
   // Containers
   pattern() {
+    let pos: Vector2 = new Vector2(0);
+    if (this.size % 2 !== 0) {
+      pos = new Vector2(-5);
+    }
     return (
-      <Layout ref={this.container}>
+      <Layout ref={this.container} position={pos}>
         <Layout ref={this.dotContainer}></Layout>
         <Layout ref={this.lineContainer}></Layout>
       </Layout>
@@ -142,8 +151,8 @@ class CirclePattern {
   calcOuterDotPos(): Vector2[] {
     const pos: Vector2[] = [
       new Vector2(
-        Math.floor(this.size / 2) * -this.spacing,
-        Math.floor(this.width / 2) * -this.spacing
+        (this.size / 2) * -this.spacing,
+        (this.width / 2) * -this.spacing
       ),
     ];
     this.outerDotDiffs.forEach((vector) => {
@@ -181,7 +190,9 @@ class CirclePattern {
   *animateInnerDots(): ThreadGenerator {
     this.logger.info(this.outerDots.toString());
     const left = this.outerDots.filter((dot) => dot.x() < 0.1 * this.spacing);
-    const topLeft = this.outerDots.filter((dot) => dot.y() < -dot.x() + 0.1 * this.spacing);
+    const topLeft = this.outerDots.filter(
+      (dot) => dot.y() < -dot.x() + 0.1 * this.spacing
+    );
     const top = this.outerDots.filter((dot) => dot.y() < 0.1 * this.spacing);
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     this.logger.info(left.length.toString());
