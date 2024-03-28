@@ -1,10 +1,17 @@
-import { Circle, Layout, Line, makeScene2D } from "@motion-canvas/2d";
+import { Circle, Layout, Line, Rect, makeScene2D } from "@motion-canvas/2d";
 import {
   Color,
   Logger,
+  Reference,
+  ThreadGenerator,
+  TimingFunction,
   Vector2,
+  all,
+  chain,
   createRef,
   createRefArray,
+  easeOutQuad,
+  easeOutQuart,
   useLogger,
 } from "@motion-canvas/core";
 
@@ -12,11 +19,21 @@ export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
   const circle1 = new CirclePattern(1, logger);
+  view.add(circle1.pattern());
+  yield* circle1.animateOuterDots();
   //#endregion
 });
 
 class CirclePattern {
   // Containers
+  pattern() {
+    return (
+      <Layout ref={this.container}>
+        <Layout ref={this.dotContainer}></Layout>
+        <Layout ref={this.lineContainer}></Layout>
+      </Layout>
+    );
+  }
   container = createRef<Layout>();
   dotContainer = createRef<Layout>();
   lineContainer = createRef<Layout>();
@@ -29,10 +46,12 @@ class CirclePattern {
   lines = createRefArray<Line>();
   // Values
   size: number;
-  spacing: number = 10;
+  spacing: number = 200;
   width: number;
-  dotSize: number = 1;
+  dotSize: number = 50;
   dotColor: Color = new Color("grey");
+  dotTiming: number = 1;
+  dotTimingFunction: TimingFunction = easeOutQuad;
   outerDotDiffs: Vector2[];
   outerDotPos: Vector2[];
   // Debug
@@ -44,12 +63,6 @@ class CirclePattern {
     this.outerDotDiffs = this.calcOuterDotDiffs();
     this.width = this.calcPatternWidth();
     this.outerDotPos = this.calcOuterDotPos();
-    this.generateOuterDots();
-
-    <Layout ref={this.container}>
-      <Layout ref={this.dotContainer}></Layout>
-      <Layout ref={this.lineContainer}></Layout>
-    </Layout>;
   }
 
   // Return an array of pos differences between outer dots
@@ -109,18 +122,41 @@ class CirclePattern {
     return pos;
   }
 
-  // generateOuterDots(): void {
-  //   this.outerDotPos.forEach((vector, index) => {
+  *animateOuterDots(): ThreadGenerator {
+    yield* chain(
+      ...this.outerDotPos.map((vector, index) => {
+        if (index == 0) {
+          this.dotContainer().add(this.createDot(this.outerDots, vector));
+        } else {
+          this.dotContainer().add(
+            this.createDot(this.outerDots, this.outerDotPos[index - 1])
+          );
+        }
+        return all(
+          this.outerDots[index].position(
+            vector,
+            this.dotTiming,
+            this.dotTimingFunction
+          ),
+          this.outerDots[index].opacity(
+            1,
+            this.dotTiming - 0.2,
+            this.dotTimingFunction
+          )
+        );
+      })
+    );
+  }
 
-  //     <Circle
-  //       ref={this.outerDots}
-  //       position={}
-  //       size={this.dotSize}
-  //       fill={this.dotColor}
-  //     ></Circle>;
-  //   });
-  // }
-  // newDot(pos){
-
-  // }
+  createDot(ref: Reference<Circle>, pos: Vector2) {
+    return (
+      <Circle
+        ref={ref}
+        position={pos}
+        size={this.dotSize}
+        fill={this.dotColor}
+        opacity={0}
+      ></Circle>
+    );
+  }
 }
