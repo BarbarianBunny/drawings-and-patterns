@@ -1,5 +1,6 @@
 import { Circle, Layout, Line, makeScene2D } from "@motion-canvas/2d";
 import {
+  Color,
   Logger,
   Vector2,
   createRef,
@@ -10,8 +11,7 @@ import {
 export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
-  const circle1 = new CirclePattern(2, logger);
-  logger.info(circle1.outerDotDiffs.toString());
+  const circle1 = new CirclePattern(1, logger);
   //#endregion
 });
 
@@ -29,9 +29,12 @@ class CirclePattern {
   lines = createRefArray<Line>();
   // Values
   size: number;
-  spacing: 10;
+  spacing: number = 10;
   width: number;
+  dotSize: number = 1;
+  dotColor: Color = new Color("grey");
   outerDotDiffs: Vector2[];
+  outerDotPos: Vector2[];
   // Debug
   logger: Console | Logger;
 
@@ -40,7 +43,8 @@ class CirclePattern {
     this.size = size;
     this.outerDotDiffs = this.calcOuterDotDiffs();
     this.width = this.calcPatternWidth();
-    this.logger.info(this.width.toString());
+    this.outerDotPos = this.calcOuterDotPos();
+    this.generateOuterDots();
 
     <Layout ref={this.container}>
       <Layout ref={this.dotContainer}></Layout>
@@ -93,10 +97,30 @@ class CirclePattern {
   // Returns the pattern's outer dot's positions
   // Accounts for spacing between dots
   calcOuterDotPos(): Vector2[] {
-    const startX: number = Math.floor(this.size / 2) * this.spacing;
-    const startY: number = Math.floor(this.width / 2) * this.spacing;
-    const pos: Vector2[] = [new Vector2(startX, startY)];
-    // TODO:
+    const pos: Vector2[] = [
+      new Vector2(
+        Math.floor(this.size / 2) * -this.spacing,
+        Math.floor(this.width / 2) * -this.spacing
+      ),
+    ];
+    this.outerDotDiffs.forEach((vector) => {
+      pos.push(pos[pos.length - 1].add(vector.scale(this.spacing)));
+    });
     return pos;
   }
+
+  // generateOuterDots(): void {
+  //   this.outerDotPos.forEach((vector, index) => {
+
+  //     <Circle
+  //       ref={this.outerDots}
+  //       position={}
+  //       size={this.dotSize}
+  //       fill={this.dotColor}
+  //     ></Circle>;
+  //   });
+  // }
+  // newDot(pos){
+
+  // }
 }
