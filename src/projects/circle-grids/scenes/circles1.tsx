@@ -1,8 +1,16 @@
-import { Circle, Layout, Line, Rect, makeScene2D } from "@motion-canvas/2d";
+import {
+  Circle,
+  Grid,
+  Layout,
+  Line,
+  Rect,
+  makeScene2D,
+} from "@motion-canvas/2d";
 import {
   Color,
   Logger,
   Reference,
+  ReferenceArray,
   ThreadGenerator,
   TimingFunction,
   Vector2,
@@ -12,16 +20,38 @@ import {
   createRefArray,
   easeOutQuad,
   easeOutQuart,
+  linear,
   useLogger,
 } from "@motion-canvas/core";
 
 export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
+  const page = createRef<Layout>();
+  const grid = createRef<Grid>();
   const circle1 = new CirclePattern(1, logger);
-  view.add(circle1.pattern());
-  yield* circle1.animateOuterDots();
   //#endregion
+
+  view.add(
+    <Layout ref={page} scale={10}>
+      <Grid
+        ref={grid}
+        stroke={"grey"}
+        lineWidth={0.2}
+        width={"100%"}
+        height={"100%"}
+        spacing={10}
+        start={0}
+        end={1}
+      ></Grid>
+    </Layout>
+  );
+  page().absolutePosition(page().absolutePosition().add([-50, -50]));
+  // Animate 1st Circle dot creation
+  page().add(circle1.pattern());
+
+  yield* circle1.animateOuterDots();
+  yield* circle1.animateInnerDots();
 });
 
 class CirclePattern {
@@ -46,11 +76,11 @@ class CirclePattern {
   lines = createRefArray<Line>();
   // Values
   size: number;
-  spacing: number = 200;
+  spacing: number = 10;
   width: number;
-  dotSize: number = 50;
+  dotSize: number = 4;
   dotColor: Color = new Color("grey");
-  dotTiming: number = 1;
+  dotTiming: number = 0.5;
   dotTimingFunction: TimingFunction = easeOutQuad;
   outerDotDiffs: Vector2[];
   outerDotPos: Vector2[];
@@ -147,6 +177,24 @@ class CirclePattern {
       })
     );
   }
+
+  *animateInnerDots(): ThreadGenerator {
+    this.logger.info(this.outerDots.toString());
+    const left = this.outerDots.filter((dot) => dot.x() < 0.1 * this.spacing);
+    const topLeft = this.outerDots.filter((dot) => dot.y() < -dot.x() + 0.1 * this.spacing);
+    const top = this.outerDots.filter((dot) => dot.y() < 0.1 * this.spacing);
+    const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
+    this.logger.info(left.length.toString());
+    this.logger.info(topLeft.length.toString());
+    this.logger.info(top.length.toString());
+    this.logger.info(topRight.length.toString());
+    // Animate moving from top left to bottom right
+    // Either disappearing when hitting an existing dot
+    // Or creating a new dot
+    // Moving dots go from 0 opacity to 1 each time just like the outer dots
+  }
+  *animateInnerDotsHorizontal(): ThreadGenerator {}
+  *animateInnerDotsCombined(): ThreadGenerator {}
 
   createDot(ref: Reference<Circle>, pos: Vector2) {
     return (
