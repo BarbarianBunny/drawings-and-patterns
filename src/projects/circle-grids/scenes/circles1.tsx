@@ -31,10 +31,10 @@ import {
 export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
-  const spacing = 10;
+  const unit = 10;
   const page = createRef<Layout>();
   const grid = createRef<Grid>();
-  const circle1 = new CirclePattern(2, logger);
+  const circle1 = new CirclePattern(1, logger);
   //#endregion
 
   view.add(
@@ -45,17 +45,17 @@ export default makeScene2D(function* (view) {
         lineWidth={0.2}
         width={"100%"}
         height={"100%"}
-        spacing={spacing}
+        spacing={unit}
         start={0}
         end={1}
       ></Grid>
     </Layout>
   );
-  page().absolutePosition(
-    page()
-      .absolutePosition()
-      .add([-5 * spacing, -5 * spacing])
-  );
+  // page().absolutePosition(
+  //   page()
+  //     .absolutePosition()
+  //     .add([-5 * unit, -5 * unit])
+  // );
   // Animate 1st Circle dot creation
   page().add(circle1.pattern());
 
