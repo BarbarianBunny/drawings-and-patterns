@@ -16,9 +16,12 @@ import {
   TimingFunction,
   Vector2,
   all,
+  any,
   chain,
   createRef,
   createRefArray,
+  easeOutCirc,
+  easeOutCubic,
   easeOutQuad,
   easeOutQuart,
   linear,
@@ -31,11 +34,11 @@ export default makeScene2D(function* (view) {
   const spacing = 10;
   const page = createRef<Layout>();
   const grid = createRef<Grid>();
-  const circle1 = new CirclePattern(1, logger);
+  const circle1 = new CirclePattern(2, logger);
   //#endregion
 
   view.add(
-    <Layout ref={page} scale={10}>
+    <Layout ref={page} scale={5}>
       <Grid
         ref={grid}
         stroke={"grey"}
@@ -91,7 +94,8 @@ class CirclePattern {
   dotSize: number = 4;
   dotColor: Color = new Color("grey");
   dotMoveTime: number = 0.5;
-  dotTimingFn: TimingFunction = easeOutQuad;
+  dotMoveTimingFn: TimingFunction = linear;
+  dotOpacityTimingFn: TimingFunction = easeOutQuad;
   outerDotDiffs: Vector2[];
   outerDotPos: Vector2[];
   // Debug
@@ -159,7 +163,7 @@ class CirclePattern {
     return pos;
   }
 
-  *animateOuterDots(timing: number = this.dotMoveTime): ThreadGenerator {
+  *animateOuterDots(time: number = this.dotMoveTime): ThreadGenerator {
     yield* chain(
       ...this.outerDotPos.map((vector, index) => {
         if (index == 0) {
@@ -169,14 +173,34 @@ class CirclePattern {
             this.createDot(this.outerDots, this.outerDotPos[index - 1])
           );
         }
-        return all(
-          this.outerDots[index].position(vector, timing, this.dotTimingFn),
-          this.outerDots[index].opacity(1, timing - 0.2, this.dotTimingFn)
-        );
+
+        return this.moveDotTo(this.outerDots[index], vector, time);
       })
     );
   }
 
+  private moveDotTo(
+    dot: Circle,
+    vector: Vector2,
+    time: number
+  ): ThreadGenerator {
+    dot.opacity(0);
+    return all(
+      dot.position(vector, time, this.dotMoveTimingFn),
+      dot.opacity(1, time - 0.2, this.dotOpacityTimingFn)
+    );
+  }
+  private moveDot(
+    dot: Circle,
+    move: PossibleVector2,
+    time: number
+  ): ThreadGenerator {
+    dot.opacity(0);
+    return all(
+      dot.position(dot.position().add(move), time, this.dotMoveTimingFn),
+      dot.opacity(1, Math.max(time - 0.2, 0), this.dotOpacityTimingFn)
+    );
+  }
   *animateInnerDots(time: number = this.dotMoveTime): ThreadGenerator {
     const left = this.outerDots.filter((dot) => dot.x() < 0);
     const toRight: PossibleVector2 = [this.unit, 0];
@@ -196,13 +220,13 @@ class CirclePattern {
         })
       ),
       all(
-        ...topLeft.map((dot, index) => {
-          return this.animateOutToIn(dot, toBottomRight, time, duplicates);
+        ...top.map((dot, index) => {
+          return this.animateOutToIn(dot, toBottom, time, duplicates);
         })
       ),
       all(
-        ...top.map((dot, index) => {
-          return this.animateOutToIn(dot, toBottom, time, duplicates);
+        ...topLeft.map((dot, index) => {
+          return this.animateOutToIn(dot, toBottomRight, time, duplicates);
         })
       ),
       all(
@@ -250,13 +274,10 @@ class CirclePattern {
       ) {
         duplicates.push(clone);
         actions.push(
-          chain(
-            moveDot(clone, direction, time, this.dotTimingFn),
-            clone.opacity(0, 0)
-          )
+          chain(this.moveDot(clone, direction, time), clone.opacity(0, 0))
         );
       } else {
-        actions.push(moveDot(clone, direction, time, this.dotTimingFn));
+        actions.push(this.moveDot(clone, direction, time));
         this.innerDots.push(clone);
       }
       clone = clone.clone();
@@ -265,24 +286,8 @@ class CirclePattern {
     }
     duplicates.push(clone);
     actions.push(
-      chain(
-        moveDot(clone, direction, time, this.dotTimingFn),
-        clone.opacity(0, 0)
-      )
+      chain(this.moveDot(clone, direction, time), clone.opacity(0, 0))
     );
     return chain(...actions);
   }
-}
-
-function moveDot(
-  dot: Circle,
-  move: PossibleVector2,
-  time: number,
-  timingFn: TimingFunction
-): ThreadGenerator {
-  dot.opacity(0);
-  return all(
-    dot.position(dot.position().add(move), time, timingFn),
-    dot.opacity(1, time - 0.2, timingFn)
-  );
 }
