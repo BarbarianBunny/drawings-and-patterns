@@ -187,55 +187,34 @@ class CirclePattern {
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     const toBottomLeft: PossibleVector2 = [-this.unit, this.unit];
 
-    const removeDuplicates: Circle[] = [];
+    const duplicates: Circle[] = [];
     // Animate Left to Right
     yield* chain(
       all(
         ...left.map((dot, index) => {
-          const actions: ThreadGenerator[] = [];
-          let clone = dot.clone();
-          this.dotContainer().add(clone);
-          this.dots().forEach((dot) => {this.logger.info(dot.position().toString())})
-          this.logger.info(
-            clone.position().toString() +
-              " + " +
-              toRight.toString() +
-              " = " +
-              clone.position().add(toRight).toString()
-          );
-          this.logger.info((this.dots()[1].position() == clone.position().add(toRight)).toString() + ": " + clone.position().add(toRight).toString() + " == " + this.dots()[1].position().toString())
-          while (
-            this.dots().some((dot) => {
-              dot.position() != clone.position().add(toRight);
-            })
-          ) {
-            this.logger.info("While:");
-            actions.push(moveDot(clone, toRight, time, this.dotTimingFn));
-            this.innerDots.push(clone);
-            clone = clone.clone();
-            this.dotContainer().add(clone);
-          }
-          this.logger.info("Remove Last:");
-          removeDuplicates.push(clone);
-          actions.push(
-            chain(
-              moveDot(clone, toRight, time, this.dotTimingFn),
-              clone.opacity(0, 0)
-            )
-          );
-          return chain(...actions);
+          return this.animateOutToIn(dot, toRight, time, duplicates);
+        })
+      ),
+      all(
+        ...topLeft.map((dot, index) => {
+          return this.animateOutToIn(dot, toBottomRight, time, duplicates);
+        })
+      ),
+      all(
+        ...top.map((dot, index) => {
+          return this.animateOutToIn(dot, toBottom, time, duplicates);
+        })
+      ),
+      all(
+        ...topRight.map((dot, index) => {
+          return this.animateOutToIn(dot, toBottomLeft, time, duplicates);
         })
       )
     );
-    // Remove Duplicate Clones
-    this.logger.info(this.dotContainer().children().length.toString());
-    removeDuplicates.forEach((dot) => {
+
+    duplicates.forEach((dot) => {
       dot.remove().dispose();
     });
-    this.logger.info(this.dotContainer().children().length.toString());
-    // Animate Top Left to Bottom Right
-    // Animate Top to Bottom
-    // Animate Top Right to Bottom Left
   }
 
   createDot(ref: Reference<Circle>, pos: Vector2) {
@@ -248,6 +227,50 @@ class CirclePattern {
         opacity={0}
       ></Circle>
     );
+  }
+
+  animateOutToIn(
+    dot: Circle,
+    direction: PossibleVector2,
+    time: number,
+    duplicates: Circle[]
+  ): ThreadGenerator {
+    const actions: ThreadGenerator[] = [];
+    let clone = dot.clone();
+    this.dotContainer().add(clone);
+    while (
+      !this.outerDots.some((outerDot: Circle) => {
+        return outerDot.position().equals(clone.position().add(direction));
+      })
+    ) {
+      if (
+        this.dots().some((outerDot: Circle) => {
+          outerDot.position().equals(clone.position().add(direction));
+        })
+      ) {
+        duplicates.push(clone);
+        actions.push(
+          chain(
+            moveDot(clone, direction, time, this.dotTimingFn),
+            clone.opacity(0, 0)
+          )
+        );
+      } else {
+        actions.push(moveDot(clone, direction, time, this.dotTimingFn));
+        this.innerDots.push(clone);
+      }
+      clone = clone.clone();
+      clone.position(clone.position().add(direction));
+      this.dotContainer().add(clone);
+    }
+    duplicates.push(clone);
+    actions.push(
+      chain(
+        moveDot(clone, direction, time, this.dotTimingFn),
+        clone.opacity(0, 0)
+      )
+    );
+    return chain(...actions);
   }
 }
 
