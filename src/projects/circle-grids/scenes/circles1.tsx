@@ -9,6 +9,7 @@ import {
 import {
   Color,
   Logger,
+  PossibleVector2,
   Reference,
   ReferenceArray,
   ThreadGenerator,
@@ -85,12 +86,12 @@ class CirclePattern {
   lines = createRefArray<Line>();
   // Values
   size: number;
-  spacing: number = 10;
+  unit: number = 10;
   width: number;
   dotSize: number = 4;
   dotColor: Color = new Color("grey");
-  dotTiming: number = 0.5;
-  dotTimingFunction: TimingFunction = easeOutQuad;
+  dotMoveTime: number = 0.5;
+  dotTimingFn: TimingFunction = easeOutQuad;
   outerDotDiffs: Vector2[];
   outerDotPos: Vector2[];
   // Debug
@@ -150,18 +151,15 @@ class CirclePattern {
   // Accounts for spacing between dots
   calcOuterDotPos(): Vector2[] {
     const pos: Vector2[] = [
-      new Vector2(
-        (this.size / 2) * -this.spacing,
-        (this.width / 2) * -this.spacing
-      ),
+      new Vector2((this.size / 2) * -this.unit, (this.width / 2) * -this.unit),
     ];
     this.outerDotDiffs.forEach((vector) => {
-      pos.push(pos[pos.length - 1].add(vector.scale(this.spacing)));
+      pos.push(pos[pos.length - 1].add(vector.scale(this.unit)));
     });
     return pos;
   }
 
-  *animateOuterDots(): ThreadGenerator {
+  *animateOuterDots(timing: number = this.dotMoveTime): ThreadGenerator {
     yield* chain(
       ...this.outerDotPos.map((vector, index) => {
         if (index == 0) {
@@ -172,40 +170,73 @@ class CirclePattern {
           );
         }
         return all(
-          this.outerDots[index].position(
-            vector,
-            this.dotTiming,
-            this.dotTimingFunction
-          ),
-          this.outerDots[index].opacity(
-            1,
-            this.dotTiming - 0.2,
-            this.dotTimingFunction
-          )
+          this.outerDots[index].position(vector, timing, this.dotTimingFn),
+          this.outerDots[index].opacity(1, timing - 0.2, this.dotTimingFn)
         );
       })
     );
   }
 
-  *animateInnerDots(): ThreadGenerator {
-    this.logger.info(this.outerDots.toString());
+  *animateInnerDots(time: number = this.dotMoveTime): ThreadGenerator {
     const left = this.outerDots.filter((dot) => dot.x() < 0);
-    const topLeft = this.outerDots.filter(
-      (dot) => dot.y() < -dot.x()
-    );
+    const toRight: PossibleVector2 = [this.unit, 0];
+    const topLeft = this.outerDots.filter((dot) => dot.y() < -dot.x());
+    const toBottomRight: PossibleVector2 = [this.unit, this.unit];
     const top = this.outerDots.filter((dot) => dot.y() < 0);
+    const toBottom: PossibleVector2 = [0, this.unit];
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
-    this.logger.info(left.length.toString());
-    this.logger.info(topLeft.length.toString());
-    this.logger.info(top.length.toString());
-    this.logger.info(topRight.length.toString());
-    // Animate moving from top left to bottom right
-    // Either disappearing when hitting an existing dot
-    // Or creating a new dot
-    // Moving dots go from 0 opacity to 1 each time just like the outer dots
+    const toBottomLeft: PossibleVector2 = [-this.unit, this.unit];
+
+    const removeDuplicates: Circle[] = [];
+    // Animate Left to Right
+    yield* chain(
+      all(
+        ...left.map((dot, index) => {
+          const actions: ThreadGenerator[] = [];
+          let clone = dot.clone();
+          this.dotContainer().add(clone);
+          this.dots().forEach((dot) => {this.logger.info(dot.position().toString())})
+          this.logger.info(
+            clone.position().toString() +
+              " + " +
+              toRight.toString() +
+              " = " +
+              clone.position().add(toRight).toString()
+          );
+          this.logger.info((this.dots()[1].position() == clone.position().add(toRight)).toString() + ": " + clone.position().add(toRight).toString() + " == " + this.dots()[1].position().toString())
+          while (
+            this.dots().some((dot) => {
+              dot.position() != clone.position().add(toRight);
+            })
+          ) {
+            this.logger.info("While:");
+            actions.push(moveDot(clone, toRight, time, this.dotTimingFn));
+            this.innerDots.push(clone);
+            clone = clone.clone();
+            this.dotContainer().add(clone);
+          }
+          this.logger.info("Remove Last:");
+          removeDuplicates.push(clone);
+          actions.push(
+            chain(
+              moveDot(clone, toRight, time, this.dotTimingFn),
+              clone.opacity(0, 0)
+            )
+          );
+          return chain(...actions);
+        })
+      )
+    );
+    // Remove Duplicate Clones
+    this.logger.info(this.dotContainer().children().length.toString());
+    removeDuplicates.forEach((dot) => {
+      dot.remove().dispose();
+    });
+    this.logger.info(this.dotContainer().children().length.toString());
+    // Animate Top Left to Bottom Right
+    // Animate Top to Bottom
+    // Animate Top Right to Bottom Left
   }
-  *animateInnerDotsHorizontal(): ThreadGenerator {}
-  *animateInnerDotsCombined(): ThreadGenerator {}
 
   createDot(ref: Reference<Circle>, pos: Vector2) {
     return (
@@ -218,4 +249,17 @@ class CirclePattern {
       ></Circle>
     );
   }
+}
+
+function moveDot(
+  dot: Circle,
+  move: PossibleVector2,
+  time: number,
+  timingFn: TimingFunction
+): ThreadGenerator {
+  dot.opacity(0);
+  return all(
+    dot.position(dot.position().add(move), time, timingFn),
+    dot.opacity(1, time - 0.2, timingFn)
+  );
 }
