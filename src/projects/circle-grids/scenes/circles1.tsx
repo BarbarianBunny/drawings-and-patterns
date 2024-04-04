@@ -31,13 +31,13 @@ export default makeScene2D(function* (view) {
       ></Grid>
     </Layout>
   );
-  page().add(circle1.pattern());
+  page().add(circle1);
 
   yield* circle1.animateOuterDots();
   yield* circle1.animateInnerDots();
 
-  page().add(circle2.pattern());
-  page().add(circle3.pattern());
+  page().add(circle2);
+  page().add(circle3);
 
   yield* circle2.animateOuterDots(0);
   yield* circle2.animateInnerDots(0);
@@ -46,8 +46,8 @@ export default makeScene2D(function* (view) {
   yield* circle3.animateInnerDots(0);
 
   yield* all(
-    circle1.container().position(circle1.container().position().add([0, 3 * unit]), 2, linear),
-    circle2.container().position(circle2.container().position().add([-1 * unit, -1 * unit]), 2, linear),
-    circle3.container().position(circle3.container().position().add([3 * unit, 0]), 2, linear)
+    circle1.position(circle1.position().add([0, 3 * unit]), 2, linear),
+    circle2.position(circle2.position().add([-1 * unit, -1 * unit]), 2, linear),
+    circle3.position(circle3.position().add([3 * unit, 0]), 2, linear)
   );
 });

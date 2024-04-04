@@ -1,10 +1,9 @@
-import { Circle, Layout, Line } from "@motion-canvas/2d";
+import { Circle, Layout, LayoutProps, Line } from "@motion-canvas/2d";
 import {
   Color,
   Logger,
   PossibleVector2,
-  Reference,
-  ThreadGenerator,
+  Reference, ThreadGenerator,
   TimingFunction,
   Vector2,
   all,
@@ -12,12 +11,15 @@ import {
   createRef,
   createRefArray,
   easeOutQuad,
-  linear,
+  linear
 } from "@motion-canvas/core";
 
-export class CirclePattern {
+export interface CirclePatternProps extends LayoutProps {
+  // patternSize?: SignalValue<number>;
+}
+
+export class CirclePattern extends Layout {
   // Containers
-  container = createRef<Layout>();
   dotContainer = createRef<Layout>();
   lineContainer = createRef<Layout>();
   // Lists
@@ -28,9 +30,9 @@ export class CirclePattern {
   }
   lines = createRefArray<Line>();
   // Values
-  size: number;
+  patternSize: number;
   unit: number = 10;
-  width: number;
+  patternWidth: number;
   dotSize: number = 4;
   dotColor: Color = new Color("grey");
   dotMoveTime: number = 0.5;
@@ -41,46 +43,50 @@ export class CirclePattern {
   // Debug
   logger: Console | Logger;
 
-  public constructor(size: number, logger: Console | Logger) {
-    this.logger = logger;
-    this.size = size;
-    this.outerDotDiffs = this.calcOuterDotDiffs();
-    this.width = this.calcPatternWidth();
-    this.outerDotPos = this.calcOuterDotPos();
-  }
-
-  // Return the Nodes to be placed in the view
-  public pattern() {
-    let pos: Vector2 = new Vector2(0);
-    if (this.size % 2 !== 0) {
-      pos = new Vector2(-5);
+  public constructor(
+    size: number,
+    logger: Console | Logger,
+    props?: CirclePatternProps
+  ) {
+    super({ ...props });
+    this.patternSize = size;
+    if (this.patternSize % 2 !== 0) {
+      this.position(new Vector2(-5));
+    } else {
+      this.position(new Vector2(0));
     }
-    return (
-      <Layout ref={this.container} position={pos}>
+
+    this.logger = logger;
+    this.outerDotDiffs = this.calcOuterDotDiffs();
+    this.patternWidth = this.calcPatternWidth();
+    this.outerDotPos = this.calcOuterDotPos();
+
+    this.add(
+      <>
         <Layout ref={this.dotContainer}></Layout>
         <Layout ref={this.lineContainer}></Layout>
-      </Layout>
+      </>
     );
   }
 
   // Return an array of pos differences between outer dots
   // Starts at the top middle left dot
   private calcOuterDotDiffs(): Vector2[] {
-    const diffs = [new Vector2(this.size, 0)];
+    const diffs = [new Vector2(this.patternSize, 0)];
     function lastDiff(): Vector2 {
       return diffs[diffs.length - 1];
     }
 
-    while (lastDiff().y < this.size) {
+    while (lastDiff().y < this.patternSize) {
       diffs.push(lastDiff().addY(1));
     }
-    while (lastDiff().x > -this.size) {
+    while (lastDiff().x > -this.patternSize) {
       diffs.push(lastDiff().addX(-1));
     }
-    while (lastDiff().y > -this.size) {
+    while (lastDiff().y > -this.patternSize) {
       diffs.push(lastDiff().addY(-1));
     }
-    while (lastDiff().x < this.size) {
+    while (lastDiff().x < this.patternSize) {
       diffs.push(lastDiff().addX(1));
     }
     while (lastDiff().y < -1) {
@@ -109,7 +115,10 @@ export class CirclePattern {
   // Accounts for spacing between dots
   private calcOuterDotPos(): Vector2[] {
     const pos: Vector2[] = [
-      new Vector2((this.size / 2) * -this.unit, (this.width / 2) * -this.unit),
+      new Vector2(
+        (this.patternSize / 2) * -this.unit,
+        (this.patternWidth / 2) * -this.unit
+      ),
     ];
     this.outerDotDiffs.forEach((vector) => {
       pos.push(pos[pos.length - 1].add(vector.scale(this.unit)));
