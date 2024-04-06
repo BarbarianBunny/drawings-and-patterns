@@ -13,6 +13,7 @@ import {
   createRefArray,
   easeOutQuad,
   linear,
+  sequence,
   waitFor,
   waitUntil,
 } from "@motion-canvas/core";
@@ -43,7 +44,7 @@ export class CirclePattern extends Layout {
     return Math.sqrt(2 * (2 * this.patternSize ** 2) ** 2);
   }
   dotSize: number = 4;
-  dotColor: Color = new Color("grey");
+  dotColor: Color = new Color("lightgray");
   dotMoveTime: number = 0.5;
   dotMoveTimingFn: TimingFunction = linear;
   dotOpacityTimingFn: TimingFunction = easeOutQuad;
@@ -68,7 +69,7 @@ export class CirclePattern extends Layout {
     this.logger = logger;
     this.outerDotDiffs = this.calcOuterDotDiffs();
     this.patternWidth = this.calcPatternWidth();
-    this.outerDotPos = this.calcOuterDotPos();
+    this.outerDotPos = this.calcOuterDotPos(true);
 
     this.add(
       <>
@@ -122,17 +123,27 @@ export class CirclePattern extends Layout {
 
   // Returns the pattern's outer dot's positions
   // Accounts for spacing between dots
-  private calcOuterDotPos(): Vector2[] {
-    const pos: Vector2[] = [
+  private calcOuterDotPos(diagonalStart: boolean = false): Vector2[] {
+    const positions: Vector2[] = [
       new Vector2(
         (this.patternSize / 2) * -this.unit,
         (this.patternWidth / 2) * -this.unit
       ),
     ];
     this.outerDotDiffs.forEach((vector) => {
-      pos.push(pos[pos.length - 1].add(vector.scale(this.unit)));
+      positions.push(
+        positions[positions.length - 1].add(vector.scale(this.unit))
+      );
     });
-    return pos;
+
+    const startPos = positions.length - this.patternSize;
+    const diagonalPositions = [];
+    for (let i = startPos; i < positions.length + startPos; i++) {
+      diagonalPositions.push(positions[i % positions.length]);
+    }
+
+    if (diagonalStart) return diagonalPositions;
+    else return positions;
   }
 
   public *animateOuterDotsClockwise(
@@ -159,7 +170,7 @@ export class CirclePattern extends Layout {
   ): ThreadGenerator {
     if (includeWaits) yield* waitUntil("DotsAppear");
     // Create invisible dots in the center
-    this.outerDotPos.forEach((vector, index) => {
+    this.outerDotPos.forEach(() => {
       let dot = this.createDot(this.outerDots, new Vector2(0));
       this.dotContainer().add(dot);
       dot.opacity(0);
@@ -173,7 +184,8 @@ export class CirclePattern extends Layout {
 
     if (includeWaits) yield* waitUntil("MoveOut");
     // Move the dots to their outer positions
-    yield* all(
+    yield* sequence(
+      time / 5,
       ...this.outerDotPos.map((vector, index) => {
         return this.outerDots[index].position(
           vector,

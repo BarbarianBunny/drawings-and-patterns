@@ -3,11 +3,23 @@
   "timeEvents": [
     {
       "name": "DotsAppear",
-      "targetTime": 0.1951232583065381
+      "targetTime": 0
     },
     {
       "name": "MoveOut",
-      "targetTime": 0.7838156484458735
+      "targetTime": 0.5
+    },
+    {
+      "name": "InnerDots",
+      "targetTime": 1.7
+    },
+    {
+      "name": "SpreadOut",
+      "targetTime": 7.520648967551628
+    },
+    {
+      "name": "Wait",
+      "targetTime": 10.536929634534372
     }
   ],
   "seed": 3201506818
