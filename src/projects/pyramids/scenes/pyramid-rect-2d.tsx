@@ -22,8 +22,8 @@ export default makeScene2D(function* (view) {
   const y: number = 0; // Starting y position
   const m: number = 100; // Length Modifier
   const t: number = 1; // Time in seconds
-  const scalePos: number = 1;
-  let scaleScale: number = 0.95;
+  const baseScaleX: number = 4;
+  const baseScaleY: number = 4;
   const loops: number = 2 ** 7;
 
   const tFx: TimingFunction = easeOutExpo;
@@ -67,36 +67,22 @@ export default makeScene2D(function* (view) {
   //#endregion
 
   //#region Add initial Layout
-  view.add(<Layout ref={freeRoot} scale={[1, 1]}></Layout>);
+  view.add(
+    <Layout
+      ref={freeRoot}
+      scale={[baseScaleX, baseScaleY]}
+      position={[0, -450]}
+    ></Layout>
+  );
   //#endregion
 
   //#region Loop
-  function* changeRoot(lines: Line[] = [], i: number): ThreadGenerator {
-    if (freeRoot().y() > -440) {
-      yield freeRoot().y(freeRoot().y() - (m / 4) * scalePos, t, tFs);
-    }
-    if (freeRoot().y() < -390) {
-      if (i < 14) {
-        scaleScale = 0.956;
-      } else if (i < 24) {
-        scaleScale = 0.978;
-      } else if (i < 32) {
-        scaleScale = 0.982;
-      } else if (i < 48) {
-        scaleScale = 0.987;
-      } else if (i < 64) {
-        scaleScale = 0.992;
-      } else if (i < 96) {
-        scaleScale = 0.9937;
-      } else if (i < 128) {
-        scaleScale = 0.9955;
-      }
-      yield freeRoot().scale(
-        [freeRoot().scale.x() * scaleScale, freeRoot().scale.y() * scaleScale],
-        t,
-        tFs
-      );
-    }
+  function* changeRoot(i: number): ThreadGenerator {
+    yield freeRoot().scale(
+      [(baseScaleX * 2) / i, (baseScaleY * 2) / i],
+      t,
+      tFs
+    );
   }
 
   for (let i = 0; i < loops; i++) {
@@ -108,7 +94,7 @@ export default makeScene2D(function* (view) {
     });
 
     // [[0, 0], [0, 0], [0, 0], [0, 0]] -> [[-m, 0], [-m, 0], [m, 0], [m, 0]]
-    yield* changeRoot(lines, i);
+    yield* changeRoot(i);
     yield* all(
       ...lines.map((line) =>
         line.points(
@@ -153,7 +139,7 @@ export default makeScene2D(function* (view) {
     lines = lines.filter((line) => line.parent() != null);
 
     // [[-m, 0], [-m, 0], [m, 0], [m, 0]] -> [[-m, m], [-m, 0], [m, 0], [m, m]]
-    yield* changeRoot(lines, i);
+    yield* changeRoot(i + 0.5);
     yield* all(
       ...lines.map((line) =>
         line.points(
