@@ -3,7 +3,8 @@ import {
   Color,
   Logger,
   PossibleVector2,
-  Reference, ThreadGenerator,
+  Reference,
+  ThreadGenerator,
   TimingFunction,
   Vector2,
   all,
@@ -11,7 +12,9 @@ import {
   createRef,
   createRefArray,
   easeOutQuad,
-  linear
+  linear,
+  waitFor,
+  waitUntil,
 } from "@motion-canvas/core";
 
 export interface CirclePatternProps extends LayoutProps {
@@ -33,6 +36,12 @@ export class CirclePattern extends Layout {
   patternSize: number;
   unit: number = 10;
   patternWidth: number;
+  patternHorizontalWidth() {
+    return 3 * this.patternSize ** 2;
+  }
+  patternDiagonalWidth() {
+    return Math.sqrt(2 * (2 * this.patternSize ** 2) ** 2);
+  }
   dotSize: number = 4;
   dotColor: Color = new Color("grey");
   dotMoveTime: number = 0.5;
@@ -126,7 +135,9 @@ export class CirclePattern extends Layout {
     return pos;
   }
 
-  public *animateOuterDots(time: number = this.dotMoveTime): ThreadGenerator {
+  public *animateOuterDotsClockwise(
+    time: number = this.dotMoveTime
+  ): ThreadGenerator {
     yield* chain(
       ...this.outerDotPos.map((vector, index) => {
         if (index == 0) {
@@ -142,27 +153,54 @@ export class CirclePattern extends Layout {
     );
   }
 
+  public *animateOuterDotsFromCenter(
+    time: number = this.dotMoveTime,
+    includeWaits: boolean = false
+  ): ThreadGenerator {
+    if (includeWaits) yield* waitUntil("DotsAppear");
+    // Create invisible dots in the center
+    this.outerDotPos.forEach((vector, index) => {
+      let dot = this.createDot(this.outerDots, new Vector2(0));
+      this.dotContainer().add(dot);
+      dot.opacity(0);
+    });
+    // Make those dots visible over time
+    yield* all(
+      ...this.outerDots.map((dot, index) => {
+        return dot.opacity(1, time);
+      })
+    );
+
+    if (includeWaits) yield* waitUntil("MoveOut");
+    // Move the dots to their outer positions
+    yield* all(
+      ...this.outerDotPos.map((vector, index) => {
+        return this.outerDots[index].position(
+          vector,
+          time,
+          this.dotMoveTimingFn
+        );
+      })
+    );
+  }
+
   private moveDotTo(
     dot: Circle,
     vector: Vector2,
     time: number
   ): ThreadGenerator {
-    dot.opacity(0);
-    return all(
-      dot.position(vector, time, this.dotMoveTimingFn),
-      dot.opacity(1, time - 0.2, this.dotOpacityTimingFn)
-    );
+    return all(dot.position(vector, time, this.dotMoveTimingFn));
   }
 
-  private moveDot(
+  private moveDotBy(
     dot: Circle,
-    move: PossibleVector2,
+    vector: PossibleVector2,
     time: number
   ): ThreadGenerator {
     dot.opacity(0);
     return all(
-      dot.position(dot.position().add(move), time, this.dotMoveTimingFn),
-      dot.opacity(1, Math.max(time - 0.2, 0), this.dotOpacityTimingFn)
+      dot.position(dot.position().add(vector), time, this.dotMoveTimingFn),
+      dot.opacity(1, 0, this.dotOpacityTimingFn)
     );
   }
 
@@ -213,7 +251,7 @@ export class CirclePattern extends Layout {
         position={pos}
         size={this.dotSize}
         fill={this.dotColor}
-        opacity={0}
+        opacity={1}
       ></Circle>
     );
   }
@@ -239,10 +277,10 @@ export class CirclePattern extends Layout {
       ) {
         duplicates.push(clone);
         actions.push(
-          chain(this.moveDot(clone, direction, time), clone.opacity(0, 0))
+          chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
         );
       } else {
-        actions.push(this.moveDot(clone, direction, time));
+        actions.push(this.moveDotBy(clone, direction, time));
         this.innerDots.push(clone);
       }
       clone = clone.clone();
@@ -251,7 +289,7 @@ export class CirclePattern extends Layout {
     }
     duplicates.push(clone);
     actions.push(
-      chain(this.moveDot(clone, direction, time), clone.opacity(0, 0))
+      chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
     );
     return chain(...actions);
   }

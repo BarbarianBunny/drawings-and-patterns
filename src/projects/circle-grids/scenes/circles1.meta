@@ -1,5 +1,14 @@
 {
   "version": 0,
-  "timeEvents": [],
+  "timeEvents": [
+    {
+      "name": "DotsAppear",
+      "targetTime": 0.1951232583065381
+    },
+    {
+      "name": "MoveOut",
+      "targetTime": 0.7838156484458735
+    }
+  ],
   "seed": 3201506818
 }

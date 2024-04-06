@@ -33,16 +33,16 @@ export default makeScene2D(function* (view) {
   );
   page().add(circle1);
 
-  yield* circle1.animateOuterDots();
+  yield* circle1.animateOuterDotsFromCenter(.5, true);
   yield* circle1.animateInnerDots();
 
   page().add(circle2);
   page().add(circle3);
 
-  yield* circle2.animateOuterDots(0);
+  yield* circle2.animateOuterDotsFromCenter(0);
   yield* circle2.animateInnerDots(0);
 
-  yield* circle3.animateOuterDots(0);
+  yield* circle3.animateOuterDotsFromCenter(0);
   yield* circle3.animateInnerDots(0);
 
   yield* all(
