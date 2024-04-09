@@ -11,11 +11,15 @@
     },
     {
       "name": "InnerDots",
-      "targetTime": 1.7
+      "targetTime": 3.300000000000001
     },
     {
-      "name": "SpreadOut",
-      "targetTime": 7.520648967551628
+      "name": "Spread1",
+      "targetTime": 8.3
+    },
+    {
+      "name": "Rays1",
+      "targetTime": 10.3
     },
     {
       "name": "Wait",

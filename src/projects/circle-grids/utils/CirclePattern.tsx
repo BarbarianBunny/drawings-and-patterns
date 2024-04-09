@@ -1,9 +1,10 @@
-import { Circle, Layout, LayoutProps, Line } from "@motion-canvas/2d";
+import { Circle, Layout, LayoutProps, Line, Ray } from "@motion-canvas/2d";
 import {
   Color,
   Logger,
   PossibleVector2,
   Reference,
+  ReferenceArray,
   ThreadGenerator,
   TimingFunction,
   Vector2,
@@ -25,14 +26,25 @@ export interface CirclePatternProps extends LayoutProps {
 export class CirclePattern extends Layout {
   // Containers
   dotContainer = createRef<Layout>();
-  lineContainer = createRef<Layout>();
+  rayContainer = createRef<Layout>();
   // Lists
   outerDots = createRefArray<Circle>();
   innerDots = createRefArray<Circle>();
   public dots() {
     return [...this.outerDots, ...this.innerDots];
   }
-  lines = createRefArray<Line>();
+  horizontalRay = createRefArray<Ray>();
+  verticalRays = createRefArray<Ray>();
+  diagonalDownRays = createRefArray<Ray>();
+  diagonalUpRays = createRefArray<Ray>();
+  public rays() {
+    return [
+      ...this.horizontalRay,
+      ...this.verticalRays,
+      ...this.diagonalDownRays,
+      ...this.diagonalUpRays,
+    ];
+  }
   // Values
   patternSize: number;
   unit: number = 10;
@@ -48,6 +60,7 @@ export class CirclePattern extends Layout {
   dotMoveTime: number = 0.5;
   dotMoveTimingFn: TimingFunction = linear;
   dotOpacityTimingFn: TimingFunction = easeOutQuad;
+  rayTimingFn: TimingFunction = linear;
   outerDotDiffs: Vector2[];
   outerDotPos: Vector2[];
   // Debug
@@ -74,7 +87,7 @@ export class CirclePattern extends Layout {
     this.add(
       <>
         <Layout ref={this.dotContainer}></Layout>
-        <Layout ref={this.lineContainer}></Layout>
+        <Layout ref={this.rayContainer}></Layout>
       </>
     );
   }
@@ -230,22 +243,22 @@ export class CirclePattern extends Layout {
     // Animate Left to Right
     yield* chain(
       all(
-        ...left.map((dot, index) => {
+        ...left.map((dot) => {
           return this.animateOutToIn(dot, toRight, time, duplicates);
         })
       ),
       all(
-        ...top.map((dot, index) => {
+        ...top.map((dot) => {
           return this.animateOutToIn(dot, toBottom, time, duplicates);
         })
       ),
       all(
-        ...topLeft.map((dot, index) => {
+        ...topLeft.map((dot) => {
           return this.animateOutToIn(dot, toBottomRight, time, duplicates);
         })
       ),
       all(
-        ...topRight.map((dot, index) => {
+        ...topRight.map((dot) => {
           return this.animateOutToIn(dot, toBottomLeft, time, duplicates);
         })
       )
@@ -263,7 +276,6 @@ export class CirclePattern extends Layout {
         position={pos}
         size={this.dotSize}
         fill={this.dotColor}
-        opacity={1}
       ></Circle>
     );
   }
@@ -304,5 +316,92 @@ export class CirclePattern extends Layout {
       chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
     );
     return chain(...actions);
+  }
+
+  private createRay(ref: Reference<Ray>, startPos: Vector2, endPos: Vector2) {
+    return (
+      <Ray
+        ref={ref}
+        from={startPos}
+        to={endPos}
+        lineWidth={this.dotSize / 2}
+        lineCap={"round"}
+        stroke={this.dotColor}
+        start={0}
+        end={0}
+      ></Ray>
+    );
+  }
+
+  *animateRays(
+    rayRefs: ReferenceArray<Ray>,
+    direction: PossibleVector2,
+    time: number = 2
+  ) {
+    this.dots().forEach((dot) => {
+      let startPos = dot.position();
+      let endPos = startPos.add(direction);
+      if (this.dots().some((dot) => dot.position().equals(endPos))) {
+        this.rayContainer().add(this.createRay(rayRefs, startPos, endPos));
+      }
+    });
+
+    yield* all(
+      ...rayRefs.map((ray) => {
+        return ray.start(1, time, this.rayTimingFn);
+      })
+    );
+  }
+
+  *animateRaysHorizontal(time: number) {
+    yield* this.animateRays(this.horizontalRay, [this.unit, 0], time);
+  }
+
+  *animateRaysVertical(time: number) {
+    yield* this.animateRays(this.verticalRays, [0, this.unit], time);
+  }
+
+  *animateRaysDiagonalDown(time: number) {
+    yield* this.animateRays(this.verticalRays, [this.unit, this.unit], time);
+  }
+
+  *animateRaysDiagonalUp(time: number) {
+    yield* this.animateRays(this.verticalRays, [-this.unit, this.unit], time);
+  }
+
+  *animateRaysH(time: number) {
+    yield* all(
+      this.animateHideDots(time * 2),
+      chain(this.animateRaysHorizontal(time), this.animateRaysVertical(time))
+    );
+  }
+
+  *animateRaysD(time: number) {
+    yield* all(
+      this.animateHideDots(time * 2),
+      chain(
+        this.animateRaysDiagonalDown(time),
+        this.animateRaysDiagonalUp(time)
+      )
+    );
+  }
+
+  *animateRaysM(time: number) {
+    yield* all(
+      this.animateHideDots(time * 2),
+      chain(
+        all(
+          this.animateRaysHorizontal(time),
+          this.animateRaysDiagonalDown(time)
+        ),
+        all(this.animateRaysVertical(time), this.animateRaysDiagonalUp(time))
+      )
+    );
+  }
+  *animateHideDots(time: number = 2) {
+    yield* all(
+      ...this.dots().map((dot) => dot.opacity(0, time, this.dotMoveTimingFn))
+    );
+    this.dots().forEach((dot) => dot.remove().dispose());
   }
 }
