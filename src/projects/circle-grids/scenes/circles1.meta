@@ -2,28 +2,36 @@
   "version": 0,
   "timeEvents": [
     {
-      "name": "DotsAppear",
+      "name": "Outer1",
       "targetTime": 0
     },
     {
-      "name": "MoveOut",
-      "targetTime": 0.5
-    },
-    {
-      "name": "InnerDots",
-      "targetTime": 3.300000000000001
+      "name": "Inner1",
+      "targetTime": 1.7
     },
     {
       "name": "Spread1",
-      "targetTime": 8.3
+      "targetTime": 6.7
     },
     {
       "name": "Rays1",
-      "targetTime": 10.3
+      "targetTime": 8.7
     },
     {
-      "name": "Wait",
-      "targetTime": 10.536929634534372
+      "name": "Outer2",
+      "targetTime": 12.7
+    },
+    {
+      "name": "Inner2",
+      "targetTime": 14.399999999999997
+    },
+    {
+      "name": "Spread2",
+      "targetTime": 19.4
+    },
+    {
+      "name": "Rays2",
+      "targetTime": 21.4
     }
   ],
   "seed": 3201506818

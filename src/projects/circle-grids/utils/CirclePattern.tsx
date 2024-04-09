@@ -181,7 +181,6 @@ export class CirclePattern extends Layout {
     time: number = this.dotMoveTime,
     includeWaits: boolean = false
   ): ThreadGenerator {
-    if (includeWaits) yield* waitUntil("DotsAppear");
     // Create invisible dots in the center
     this.outerDotPos.forEach(() => {
       let dot = this.createDot(this.outerDots, new Vector2(0));
@@ -195,7 +194,6 @@ export class CirclePattern extends Layout {
       })
     );
 
-    if (includeWaits) yield* waitUntil("MoveOut");
     // Move the dots to their outer positions
     yield* sequence(
       time / 5,
