@@ -7,31 +7,47 @@
     },
     {
       "name": "Inner1",
-      "targetTime": 1.7
+      "targetTime": 1.5956160490404385
     },
     {
       "name": "Spread1",
-      "targetTime": 6.7
+      "targetTime": 6.595616049040439
     },
     {
       "name": "Rays1",
-      "targetTime": 8.7
+      "targetTime": 8.595616049040439
     },
     {
       "name": "Outer2",
-      "targetTime": 12.7
+      "targetTime": 12.595616049040439
     },
     {
       "name": "Inner2",
-      "targetTime": 14.399999999999997
+      "targetTime": 16.095616049040434
     },
     {
       "name": "Spread2",
-      "targetTime": 19.4
+      "targetTime": 24.095616049040405
     },
     {
       "name": "Rays2",
-      "targetTime": 21.4
+      "targetTime": 26.095616049040405
+    },
+    {
+      "name": "Outer3",
+      "targetTime": 30.095616049040405
+    },
+    {
+      "name": "Inner3",
+      "targetTime": 33.79561604904043
+    },
+    {
+      "name": "Spread3",
+      "targetTime": 41.79561604904055
+    },
+    {
+      "name": "Rays3",
+      "targetTime": 43.79561604904055
     }
   ],
   "seed": 3201506818
