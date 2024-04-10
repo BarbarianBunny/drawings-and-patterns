@@ -236,28 +236,29 @@ export class CirclePattern extends Layout {
     const toBottom: PossibleVector2 = [0, this.unit];
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     const toBottomLeft: PossibleVector2 = [-this.unit, this.unit];
-
+    this.logger.info("New Dots?")
+    
     const duplicates: Circle[] = [];
     // Animate Left to Right
     yield* chain(
       all(
         ...left.map((dot) => {
-          return this.animateOutToIn(dot, toRight, time, duplicates);
+          return this.animateFrom(dot, toRight, time, duplicates);
         })
       ),
       all(
         ...top.map((dot) => {
-          return this.animateOutToIn(dot, toBottom, time, duplicates);
+          return this.animateFrom(dot, toBottom, time, duplicates);
         })
       ),
       all(
         ...topLeft.map((dot) => {
-          return this.animateOutToIn(dot, toBottomRight, time, duplicates);
+          return this.animateFrom(dot, toBottomRight, time, duplicates);
         })
       ),
       all(
         ...topRight.map((dot) => {
-          return this.animateOutToIn(dot, toBottomLeft, time, duplicates);
+          return this.animateFrom(dot, toBottomLeft, time, duplicates);
         })
       )
     );
@@ -278,7 +279,7 @@ export class CirclePattern extends Layout {
     );
   }
 
-  private animateOutToIn(
+  private animateFrom(
     dot: Circle,
     direction: PossibleVector2,
     time: number,
@@ -292,24 +293,37 @@ export class CirclePattern extends Layout {
         return outerDot.position().equals(clone.position().add(direction));
       })
     ) {
+      // While we won't hit an outer dot
       if (
-        this.dots().some((outerDot: Circle) => {
-          outerDot.position().equals(clone.position().add(direction));
+        this.dots().some((otherDot: Circle) => {
+          otherDot.position().equals(clone.position().add(direction));
         })
       ) {
+        // If we will hit a dot
+        // Prep for removal
         duplicates.push(clone);
+        // Move into position and hide
         actions.push(
           chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
         );
       } else {
+        // If we won't hit a dot
+        // Move into position
         actions.push(this.moveDotBy(clone, direction, time));
+        // Add to innerDots list
         this.innerDots.push(clone);
       }
+      // Clone the clone
       clone = clone.clone();
+      // Move position?
       clone.position(clone.position().add(direction));
+      // Add to view?
       this.dotContainer().add(clone);
     }
+    // If we will hit an outer dot
+    // Add for deletion
     duplicates.push(clone);
+    // Move and hide
     actions.push(
       chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
     );
