@@ -316,7 +316,13 @@ export class CirclePattern extends Layout {
     return chain(...actions);
   }
 
-  private createRay(ref: Reference<Ray>, startPos: Vector2, endPos: Vector2) {
+  private createRay(
+    ref: Reference<Ray>,
+    startPos: Vector2,
+    endPos: Vector2,
+    start: number = 0,
+    end: number = 0
+  ) {
     return (
       <Ray
         ref={ref}
@@ -325,8 +331,8 @@ export class CirclePattern extends Layout {
         lineWidth={this.dotSize / 2}
         lineCap={"round"}
         stroke={this.dotColor}
-        start={0}
-        end={0}
+        start={start}
+        end={end}
       ></Ray>
     );
   }
@@ -349,6 +355,55 @@ export class CirclePattern extends Layout {
         return ray.start(1, time, this.rayTimingFn);
       })
     );
+
+    // // Extend every ray in direction as available
+    // rayRefs.forEach(ray => {
+    //   while (rayRefs.some(value => {value.from().equals(ray.to())})){
+    //     ray.to(ray.to().add(direction))
+    //   }
+    // })
+    // // Only keep the longest ray of each matching to()
+    // rayRefs.forEach(ray => {
+    //   if (rayRefs.some(value => {value.to().equals(ray.to()) && rayLen(value) > rayLen(ray)})){
+    //     ray.remove().dispose()
+    //   }
+    // })
+    // function rayLen(ray: Ray){
+    //   return Math.sqrt((ray.from().x - ray.to().x)**2 + (ray.from().y - ray.to().y)**2)
+    // }
+    // // Simplify after animation
+    // // get list of positions of all dots
+    // const positions = this.dots().map((dot) => dot.position());
+    // // remove old rays
+    // rayRefs.forEach(ray => ray.remove().dispose())
+
+    // // while: it's not empty
+    // while (positions.length > 0) {
+    //   let startPos = positions.pop();
+    //   let endPos = startPos;
+    //   // Find end
+    //   while (positions.includes(endPos.add(direction))) {
+    //     let index = positions.findIndex((pos) =>
+    //       pos.equals(endPos.add(direction))
+    //     );
+    //     positions.splice(index, 1);
+    //     endPos = endPos.add(direction);
+    //   }
+    //   // Find start
+    //   let dir = direction as number[];
+    //   while (
+    //     positions.includes(startPos.add(new Vector2(dir[0] * -1, dir[1] * -1)))
+    //   ) {
+    //     let index = positions.findIndex((pos) =>
+    //       pos.equals(startPos.add(new Vector2(dir[0] * -1, dir[1] * -1)))
+    //     );
+    //     positions.splice(index, 1);
+    //     startPos = startPos.add(new Vector2(dir[0] * -1, dir[1] * -1));
+    //   }
+    //   if (!startPos.equals(endPos)){
+    //     this.rayContainer().add(this.createRay(rayRefs, startPos, endPos, 1))
+    //   }
+    // }
   }
 
   *animateRaysHorizontal(time: number) {
@@ -396,6 +451,7 @@ export class CirclePattern extends Layout {
       )
     );
   }
+
   *animateHideDots(time: number = 2) {
     yield* all(
       ...this.dots().map((dot) => dot.opacity(0, time, this.dotMoveTimingFn))
