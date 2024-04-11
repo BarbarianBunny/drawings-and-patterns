@@ -14,6 +14,7 @@ import {
   createRefArray,
   easeOutQuad,
   linear,
+  loop,
   sequence,
   waitFor,
   waitUntil,
@@ -236,8 +237,8 @@ export class CirclePattern extends Layout {
     const toBottom: PossibleVector2 = [0, this.unit];
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     const toBottomLeft: PossibleVector2 = [-this.unit, this.unit];
-    this.logger.info("New Dots?")
-    
+    this.logger.info("New Dots?");
+
     const duplicates: Circle[] = [];
     // Animate Left to Right
     yield* chain(
@@ -268,13 +269,14 @@ export class CirclePattern extends Layout {
     });
   }
 
-  private createDot(ref: Reference<Circle>, pos: Vector2) {
+  private createDot(ref: Reference<Circle>, pos: Vector2, opacity: number = 1) {
     return (
       <Circle
         ref={ref}
         position={pos}
         size={this.dotSize}
         fill={this.dotColor}
+        opacity={opacity}
       ></Circle>
     );
   }
@@ -285,9 +287,54 @@ export class CirclePattern extends Layout {
     time: number,
     duplicates: Circle[]
   ): ThreadGenerator {
-    const actions: ThreadGenerator[] = [];
+    // Takes a dot and returns a chain of animations
+    // chain(
+    // all(
+    // move temp dot clone from start),
+    // all(
+    // create invisible dot in position if it doesn't already exist,
+    // make dot visible,
+    // move temp dot to next position),
+    // )
+
+    const actions: ThreadGenerator[] = []; // [all(), all()]
+    // return chain(...actions); at end
+
     let clone = dot.clone();
+    let pos = dot.position().add(direction);
     this.dotContainer().add(clone);
+
+    // First move from outerDot pos to next spot
+    actions.push(clone.position(pos, time, linear));
+
+    // While it hasn't reached an outerDot then loop
+    while (
+      !this.outerDots.some((outerDot) => outerDot.position().equals(pos))
+    ) {
+      let loopActions: ThreadGenerator[] = [];
+      this.logger.info("Inner Pos");
+      // If a dot already exists there
+      if (!this.dots().some((anyDot) => anyDot.position().equals(pos))) {
+        this.logger.info("Create");
+        // If a dot doesn't already exist then create new dot
+        let newDot = this.createDot(this.innerDots, pos, 0);
+        this.dotContainer().add(newDot);
+        loopActions.push(newDot.opacity(1, 0));
+      } else {
+        // Dot already exists
+        this.logger.info("Exists");
+      }
+      // update position and clone
+      pos = pos.add(direction);
+      loopActions.push(clone.position(pos, time, linear));
+      actions.push(all(...loopActions));
+    }
+
+    // After reaching an outerDot send it to be deleted and send chained actions
+    this.logger.info("Last Pos");
+    duplicates.push(clone);
+    return chain(...actions);
+
     while (
       !this.outerDots.some((outerDot: Circle) => {
         return outerDot.position().equals(clone.position().add(direction));
