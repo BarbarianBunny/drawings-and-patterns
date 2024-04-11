@@ -287,16 +287,6 @@ export class CirclePattern extends Layout {
     time: number,
     duplicates: Circle[]
   ): ThreadGenerator {
-    // Takes a dot and returns a chain of animations
-    // chain(
-    // all(
-    // move temp dot clone from start),
-    // all(
-    // create invisible dot in position if it doesn't already exist,
-    // make dot visible,
-    // move temp dot to next position),
-    // )
-
     const actions: ThreadGenerator[] = []; // [all(), all()]
     // return chain(...actions); at end
 
@@ -333,47 +323,6 @@ export class CirclePattern extends Layout {
     // After reaching an outerDot send it to be deleted and send chained actions
     this.logger.info("Last Pos");
     duplicates.push(clone);
-    return chain(...actions);
-
-    while (
-      !this.outerDots.some((outerDot: Circle) => {
-        return outerDot.position().equals(clone.position().add(direction));
-      })
-    ) {
-      // While we won't hit an outer dot
-      if (
-        this.dots().some((otherDot: Circle) => {
-          otherDot.position().equals(clone.position().add(direction));
-        })
-      ) {
-        // If we will hit a dot
-        // Prep for removal
-        duplicates.push(clone);
-        // Move into position and hide
-        actions.push(
-          chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
-        );
-      } else {
-        // If we won't hit a dot
-        // Move into position
-        actions.push(this.moveDotBy(clone, direction, time));
-        // Add to innerDots list
-        this.innerDots.push(clone);
-      }
-      // Clone the clone
-      clone = clone.clone();
-      // Move position?
-      clone.position(clone.position().add(direction));
-      // Add to view?
-      this.dotContainer().add(clone);
-    }
-    // If we will hit an outer dot
-    // Add for deletion
-    duplicates.push(clone);
-    // Move and hide
-    actions.push(
-      chain(this.moveDotBy(clone, direction, time), clone.opacity(0, 0))
-    );
     return chain(...actions);
   }
 
