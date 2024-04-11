@@ -114,7 +114,7 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitUntil("Inner2");
-  yield* circles[3].animateInnerDots(0.2);
+  yield* circles[3].animateInnerDots();
 
   yield* waitUntil("Spread2");
   yield* all(
@@ -174,7 +174,7 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitUntil("Inner3");
-  yield* circles[6].animateInnerDots(0.1);
+  yield* circles[6].animateInnerDots();
 
   yield* waitUntil("Spread3");
   yield* all(

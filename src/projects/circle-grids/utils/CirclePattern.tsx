@@ -228,7 +228,7 @@ export class CirclePattern extends Layout {
     );
   }
 
-  public *animateInnerDots(time: number = this.dotMoveTime): ThreadGenerator {
+  public *animateInnerDots(time: number = 2): ThreadGenerator {
     const left = this.outerDots.filter((dot) => dot.x() < 0);
     const toRight: PossibleVector2 = [this.unit, 0];
     const topLeft = this.outerDots.filter((dot) => dot.y() < -dot.x());
@@ -244,22 +244,22 @@ export class CirclePattern extends Layout {
     yield* chain(
       all(
         ...left.map((dot) => {
-          return this.animateFrom(dot, toRight, time, duplicates);
+          return this.animateFrom(dot, toRight, time/this.patternHorizontalWidth(), duplicates);
         })
       ),
       all(
         ...top.map((dot) => {
-          return this.animateFrom(dot, toBottom, time, duplicates);
+          return this.animateFrom(dot, toBottom, time/this.patternHorizontalWidth(), duplicates);
         })
       ),
       all(
         ...topLeft.map((dot) => {
-          return this.animateFrom(dot, toBottomRight, time, duplicates);
+          return this.animateFrom(dot, toBottomRight, time/this.patternDiagonalWidth(), duplicates);
         })
       ),
       all(
         ...topRight.map((dot) => {
-          return this.animateFrom(dot, toBottomLeft, time, duplicates);
+          return this.animateFrom(dot, toBottomLeft, time/this.patternDiagonalWidth(), duplicates);
         })
       )
     );
