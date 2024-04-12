@@ -244,22 +244,42 @@ export class CirclePattern extends Layout {
     yield* chain(
       all(
         ...left.map((dot) => {
-          return this.animateFrom(dot, toRight, time/this.patternHorizontalWidth(), duplicates);
+          return this.animateFrom(
+            dot,
+            toRight,
+            time / this.patternHorizontalWidth(),
+            duplicates
+          );
         })
       ),
       all(
         ...top.map((dot) => {
-          return this.animateFrom(dot, toBottom, time/this.patternHorizontalWidth(), duplicates);
+          return this.animateFrom(
+            dot,
+            toBottom,
+            time / this.patternHorizontalWidth(),
+            duplicates
+          );
         })
       ),
       all(
         ...topLeft.map((dot) => {
-          return this.animateFrom(dot, toBottomRight, time/this.patternDiagonalWidth(), duplicates);
+          return this.animateFrom(
+            dot,
+            toBottomRight,
+            time / this.patternDiagonalWidth(),
+            duplicates
+          );
         })
       ),
       all(
         ...topRight.map((dot) => {
-          return this.animateFrom(dot, toBottomLeft, time/this.patternDiagonalWidth(), duplicates);
+          return this.animateFrom(
+            dot,
+            toBottomLeft,
+            time / this.patternDiagonalWidth(),
+            duplicates
+          );
         })
       )
     );
@@ -365,59 +385,26 @@ export class CirclePattern extends Layout {
         return ray.start(1, time, this.rayTimingFn);
       })
     );
-
-    // // Extend every ray in direction as available
-    // rayRefs.forEach(ray => {
-    //   while (rayRefs.some(value => {value.from().equals(ray.to())})){
-    //     ray.to(ray.to().add(direction))
-    //   }
-    // })
-    // // Only keep the longest ray of each matching to()
-    // rayRefs.forEach(ray => {
-    //   if (rayRefs.some(value => {value.to().equals(ray.to()) && rayLen(value) > rayLen(ray)})){
-    //     ray.remove().dispose()
-    //   }
-    // })
-    // function rayLen(ray: Ray){
-    //   return Math.sqrt((ray.from().x - ray.to().x)**2 + (ray.from().y - ray.to().y)**2)
-    // }
-    // // Simplify after animation
-    // // get list of positions of all dots
-    // const positions = this.dots().map((dot) => dot.position());
-    // // remove old rays
-    // rayRefs.forEach(ray => ray.remove().dispose())
-
-    // // while: it's not empty
-    // while (positions.length > 0) {
-    //   let startPos = positions.pop();
-    //   let endPos = startPos;
-    //   // Find end
-    //   while (positions.includes(endPos.add(direction))) {
-    //     let index = positions.findIndex((pos) =>
-    //       pos.equals(endPos.add(direction))
-    //     );
-    //     positions.splice(index, 1);
-    //     endPos = endPos.add(direction);
-    //   }
-    //   // Find start
-    //   let dir = direction as number[];
-    //   while (
-    //     positions.includes(startPos.add(new Vector2(dir[0] * -1, dir[1] * -1)))
-    //   ) {
-    //     let index = positions.findIndex((pos) =>
-    //       pos.equals(startPos.add(new Vector2(dir[0] * -1, dir[1] * -1)))
-    //     );
-    //     positions.splice(index, 1);
-    //     startPos = startPos.add(new Vector2(dir[0] * -1, dir[1] * -1));
-    //   }
-    //   if (!startPos.equals(endPos)){
-    //     this.rayContainer().add(this.createRay(rayRefs, startPos, endPos, 1))
-    //   }
-    // }
   }
-
+  *animateFinalRays(rayRefs: ReferenceArray<Ray>, direction: PossibleVector2) {
+    // Remove old rays
+    rayRefs.forEach((ray) => {
+      ray.remove().dispose();
+    });
+    // Create full rays
+    // For every dot
+    // check if it's in an existing ray
+    // if so, skip
+    // else find the end pos in the direction
+    // find the start pos in the -directions
+    // create a ray using those positions
+    // Make sure it gets added to rayRefs and rayContainer
+  }
   *animateRaysHorizontal(time: number) {
-    yield* this.animateRays(this.horizontalRay, [this.unit, 0], time);
+    yield* chain(
+      this.animateRays(this.horizontalRay, [this.unit, 0], time),
+      this.animateFinalRays(this.horizontalRay, [this.unit, 0])
+    );
   }
 
   *animateRaysVertical(time: number) {
