@@ -237,8 +237,6 @@ export class CirclePattern extends Layout {
     const toBottom: PossibleVector2 = [0, this.unit];
     const topRight = this.outerDots.filter((dot) => dot.y() < dot.x());
     const toBottomLeft: PossibleVector2 = [-this.unit, this.unit];
-    this.logger.info("New Dots?");
-
     const duplicates: Circle[] = [];
     // Animate Left to Right
     yield* chain(
@@ -322,18 +320,14 @@ export class CirclePattern extends Layout {
       !this.outerDots.some((outerDot) => outerDot.position().equals(pos))
     ) {
       let loopActions: ThreadGenerator[] = [];
-      this.logger.info("Inner Pos");
       // If a dot already exists there
       if (!this.dots().some((anyDot) => anyDot.position().equals(pos))) {
-        this.logger.info("Create");
         // If a dot doesn't already exist then create new dot
         let newDot = this.createDot(this.innerDots, pos, 0);
         this.dotContainer().add(newDot);
         loopActions.push(newDot.opacity(1, 0));
-      } else {
-        // Dot already exists
-        this.logger.info("Exists");
       }
+
       // update position and clone
       pos = pos.add(direction);
       loopActions.push(clone.position(pos, time, linear));
@@ -341,7 +335,6 @@ export class CirclePattern extends Layout {
     }
 
     // After reaching an outerDot send it to be deleted and send chained actions
-    this.logger.info("Last Pos");
     duplicates.push(clone);
     return chain(...actions);
   }
@@ -386,37 +379,112 @@ export class CirclePattern extends Layout {
       })
     );
   }
-  *animateFinalRays(rayRefs: ReferenceArray<Ray>, direction: PossibleVector2) {
+
+  dist(pos1: Vector2, pos2: Vector2) {
+    return Math.sqrt((pos2.x - pos1.x) ** 2 + (pos2.y - pos1.y) ** 2);
+  }
+
+  posOnRay(ray: Ray, pos: Vector2) {
+    const distanceDiff =
+      this.dist(ray.from(), pos) +
+      this.dist(ray.to(), pos) -
+      this.dist(ray.from(), ray.to());
+      
+    // this.logger.info("posOnRay")
+    // this.logger.info(String(ray.from()))
+    // this.logger.info(String(ray.to()))
+    // this.logger.info(String(this.dist(ray.from(), ray.to())))
+    // this.logger.info(String(ray.from()))
+    // this.logger.info(String(pos))
+    // this.logger.info(String(this.dist(ray.from(), pos)))
+    // this.logger.info(String(ray.to()))
+    // this.logger.info(String(pos))
+    // this.logger.info(String(this.dist(ray.to(), pos)))
+    // this.logger.info(String(distanceDiff))
+    return distanceDiff < 0.01 && distanceDiff > -0.01;
+  }
+
+  replaceRays(rayRefs: ReferenceArray<Ray>, direction: Vector2) {
     // Remove old rays
     rayRefs.forEach((ray) => {
       ray.remove().dispose();
     });
-    // Create full rays
-    // For every dot
-    // check if it's in an existing ray
-    // if so, skip
-    // else find the end pos in the direction
-    // find the start pos in the -directions
-    // create a ray using those positions
-    // Make sure it gets added to rayRefs and rayContainer
+    rayRefs.splice(0, rayRefs.length);
+    // this.logger.info("There are x rays left: " + String(rayRefs.length))
+
+    this.dots().forEach((dot) => {
+      let startPos = dot.position();
+      let endPos = startPos;
+      let dir = direction;
+      let invDir = new Vector2(-1 * dir.x, -1 * dir.y);
+
+      // If a ray already covers that position; go to the next dot
+      if (
+        rayRefs.some((ray) => {
+          return this.posOnRay(ray, startPos);
+        })
+      ) {
+        // this.logger.info("Dot is Covered by Existing Ray")
+        return;
+      }
+
+      // Find furthest end position
+      while (
+        this.dots().some((dot) => {
+          return dot.position().equals(endPos.add(dir));
+        })
+      ) {
+        endPos = endPos.add(dir);
+      }
+      // Find furthest start position
+      while (
+        this.dots().some((dot) => {
+          return dot.position().equals(startPos.add(invDir));
+        })
+      ) {
+        startPos = startPos.add(invDir);
+      }
+
+      // If the positions haven't changed then stop there
+      if (startPos == endPos) {
+        return;
+      }
+
+      // Create the ray
+      this.rayContainer().add(this.createRay(rayRefs, startPos, endPos, 1));
+    });
   }
+
   *animateRaysHorizontal(time: number) {
-    yield* chain(
-      this.animateRays(this.horizontalRay, [this.unit, 0], time),
-      this.animateFinalRays(this.horizontalRay, [this.unit, 0])
+    yield* this.animateRays(
+      this.horizontalRay,
+      new Vector2(this.unit, 0),
+      time
     );
+    this.replaceRays(this.horizontalRay, new Vector2(this.unit, 0));
   }
 
   *animateRaysVertical(time: number) {
-    yield* this.animateRays(this.verticalRays, [0, this.unit], time);
+    yield* this.animateRays(this.verticalRays, new Vector2(0, this.unit), time);
+    this.replaceRays(this.verticalRays, new Vector2(0, this.unit));
   }
 
   *animateRaysDiagonalDown(time: number) {
-    yield* this.animateRays(this.verticalRays, [this.unit, this.unit], time);
+    yield* this.animateRays(
+      this.diagonalDownRays,
+      new Vector2(this.unit, this.unit),
+      time
+    );
+    this.replaceRays(this.diagonalDownRays, new Vector2(this.unit, this.unit));
   }
 
   *animateRaysDiagonalUp(time: number) {
-    yield* this.animateRays(this.verticalRays, [-this.unit, this.unit], time);
+    yield* this.animateRays(
+      this.diagonalUpRays,
+      new Vector2(-this.unit, this.unit),
+      time
+    );
+    this.replaceRays(this.diagonalUpRays, new Vector2(-this.unit, this.unit));
   }
 
   *animateRaysH(time: number) {
