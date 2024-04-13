@@ -15,6 +15,7 @@ import { CirclePattern } from "../utils/CirclePattern";
 export default makeScene2D(function* (view) {
   //#region variables
   const logger = useLogger();
+  const debug = false;
   // Values
   const unit = 10;
   const unitDiagonal = Math.sqrt(2 * unit ** 2);
@@ -31,14 +32,13 @@ export default makeScene2D(function* (view) {
   const page = createRef<Layout>();
   const grid = createRef<Grid>();
   // Class
-  const size: number[] = [1, 2, 3, 4, 5];
   const circles: CirclePattern[] = [];
 
-  circles[0] = new CirclePattern(size[0], logger);
-  circles[1] = new CirclePattern(size[0], logger);
-  circles[2] = new CirclePattern(size[0], logger);
+  circles[0] = new CirclePattern(1, logger);
+  circles[1] = new CirclePattern(1, logger);
+  circles[2] = new CirclePattern(1, logger);
   //#endregion
-  // position={pageDir(1, 19.1)}
+
   view.add(
     <Layout
       ref={page}
@@ -50,8 +50,8 @@ export default makeScene2D(function* (view) {
         ref={grid}
         stroke={"3c3c3c"}
         lineWidth={0.2}
-        width={"100%"}
-        height={"100%"}
+        width={"500%"}
+        height={"500%"}
         spacing={unit}
         start={0}
         end={1}
@@ -68,15 +68,18 @@ export default makeScene2D(function* (view) {
   yield* circles[0].animateOuterDotsFromCenter(0.4, true);
 
   yield* waitUntil("Inner1");
-  yield* circles[0].animateInnerDots();
+  if (!debug) {
+    yield* circles[0].animateInnerDots();
+  }
 
   yield* waitUntil("Spread1");
   yield* all(
     circles[1].animateOuterDotsFromCenter(0),
-    circles[1].animateInnerDots(0),
-    circles[2].animateOuterDotsFromCenter(0),
-    circles[2].animateInnerDots(0)
+    circles[2].animateOuterDotsFromCenter(0)
   );
+  if (!debug) {
+    yield* all(circles[1].animateInnerDots(0), circles[2].animateInnerDots(0));
+  }
 
   yield* all(
     circles[0].position(circles[0].position().add(dir(0, 3)), 2, linear),
@@ -87,17 +90,19 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitUntil("Rays1");
-  yield* all(
-    circles[0].animateRaysH(2),
-    circles[1].animateRaysD(2),
-    circles[2].animateRaysM(2)
-  );
+  if (!debug) {
+    yield* all(
+      circles[0].animateRaysH(2),
+      circles[1].animateRaysD(2),
+      circles[2].animateRaysM(2)
+    );
+  }
   //#endregion
 
   //#region circles 2
-  circles[3] = new CirclePattern(size[1], logger);
-  circles[4] = new CirclePattern(size[1], logger);
-  circles[5] = new CirclePattern(size[1], logger);
+  circles[3] = new CirclePattern(2, logger);
+  circles[4] = new CirclePattern(2, logger);
+  circles[5] = new CirclePattern(2, logger);
 
   page().add(circles[3]);
   page().add(circles[4]);
@@ -105,45 +110,50 @@ export default makeScene2D(function* (view) {
 
   yield* waitUntil("Outer2");
   yield* all(
-    circles[0].position(circles[0].position().add(dir(-1, 7)), 2, linear),
-    circles[1].position(circles[1].position().add(dir(-4, -4)), 2, linear),
-    circles[2].position(circles[2].position().add(dir(7, -1)), 2, linear),
+    circles[0].position(circles[0].position().add(dir(-2, 6)), 2, linear),
+    circles[1].position(circles[1].position().add(dir(-5, -5)), 2, linear),
+    circles[2].position(circles[2].position().add(dir(6, -2)), 2, linear),
     page().scale(diagonalScale(13.5), 2, linear),
-    page().position(pageDir(0.75, diagonalScale(13.5)), 2, linear),
+    page().position(pageDir(1.75, diagonalScale(13.5)), 2, linear),
     delay(1, circles[3].animateOuterDotsFromCenter(0.5, true))
   );
 
   yield* waitUntil("Inner2");
-  yield* circles[3].animateInnerDots();
+  if (!debug) {
+    yield* circles[3].animateInnerDots();
+  }
 
   yield* waitUntil("Spread2");
   yield* all(
     circles[4].animateOuterDotsFromCenter(0),
-    circles[4].animateInnerDots(0),
-    circles[5].animateOuterDotsFromCenter(0),
-    circles[5].animateInnerDots(0)
+    circles[5].animateOuterDotsFromCenter(0)
   );
+  if (!debug) {
+    yield* all(circles[4].animateInnerDots(0), circles[5].animateInnerDots(0));
+  }
 
   yield* all(
-    circles[3].position(circles[3].position().add(dir(-6, 3)), 2, linear),
-    circles[4].position(circles[4].position().add(dir(3, -6)), 2, linear),
-    circles[5].position(circles[5].position().add(dir(6, 6)), 2, linear),
+    circles[3].position(circles[3].position().add(dir(-7, 2)), 2, linear),
+    circles[4].position(circles[4].position().add(dir(2, -7)), 2, linear),
+    circles[5].position(circles[5].position().add(dir(5, 5)), 2, linear),
     page().scale(diagonalScale(18.5), 2, linear),
-    page().position(pageDir(-1.75, diagonalScale(18.5)), 2, linear)
+    page().position(pageDir(-0.75, diagonalScale(18.5)), 2, linear)
   );
 
   yield* waitUntil("Rays2");
-  yield* all(
-    circles[3].animateRaysH(2),
-    circles[4].animateRaysD(2),
-    circles[5].animateRaysM(2)
-  );
+  if (!debug) {
+    yield* all(
+      circles[3].animateRaysH(2),
+      circles[4].animateRaysD(2),
+      circles[5].animateRaysM(2)
+    );
+  }
   //#endregion
 
   //#region circles 3
-  circles[6] = new CirclePattern(size[2], logger);
-  circles[7] = new CirclePattern(size[2], logger);
-  circles[8] = new CirclePattern(size[2], logger);
+  circles[6] = new CirclePattern(3, logger);
+  circles[7] = new CirclePattern(3, logger);
+  circles[8] = new CirclePattern(3, logger);
 
   page().add(circles[6]);
   page().add(circles[7]);
@@ -155,17 +165,17 @@ export default makeScene2D(function* (view) {
       if (index > 5) return;
       switch (index) {
         case 0:
-          return circle.position(circle.position().add(dir(-19, 4)), 2, linear);
+          return circle.position(circle.position().add(dir(-18, 5)), 2, linear);
         case 3:
-          return circle.position(circle.position().add(dir(-15, 2)), 2, linear);
+          return circle.position(circle.position().add(dir(-14, 3)), 2, linear);
         case 1:
-          return circle.position(circle.position().add(dir(3, -18)), 2, linear);
+          return circle.position(circle.position().add(dir(4, -17)), 2, linear);
         case 4:
-          return circle.position(circle.position().add(dir(2, -15)), 2, linear);
+          return circle.position(circle.position().add(dir(3, -14)), 2, linear);
         case 2:
-          return circle.position(circle.position().add(dir(11, 11)), 2, linear);
+          return circle.position(circle.position().add(dir(12, 12)), 2, linear);
         case 5:
-          return circle.position(circle.position().add(dir(10, 10)), 2, linear);
+          return circle.position(circle.position().add(dir(11, 11)), 2, linear);
       }
     }),
     page().scale(diagonalScale(36), 2, linear),
@@ -174,15 +184,18 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitUntil("Inner3");
-  yield* circles[6].animateInnerDots();
+  if (!debug) {
+    yield* circles[6].animateInnerDots();
+  }
 
   yield* waitUntil("Spread3");
   yield* all(
     circles[7].animateOuterDotsFromCenter(0),
-    circles[7].animateInnerDots(0),
-    circles[8].animateOuterDotsFromCenter(0),
-    circles[8].animateInnerDots(0)
+    circles[8].animateOuterDotsFromCenter(0)
   );
+  if (!debug) {
+    yield* all(circles[7].animateInnerDots(0), circles[8].animateInnerDots(0));
+  }
 
   yield* all(
     circles[6].position(circles[6].position().add(dir(-11, -11)), 2, linear),
@@ -193,14 +206,86 @@ export default makeScene2D(function* (view) {
   );
 
   yield* waitUntil("Rays3");
-  yield* all(
-    circles[6].animateRaysH(2),
-    circles[7].animateRaysD(2),
-    circles[8].animateRaysM(2)
-  );
+  if (!debug) {
+    yield* all(
+      circles[6].animateRaysH(2),
+      circles[7].animateRaysD(2),
+      circles[8].animateRaysM(2)
+    );
+  }
   //#endregion
 
   //#region circles 4
+  circles[9] = new CirclePattern(4, logger);
+  circles[10] = new CirclePattern(4, logger);
+  circles[11] = new CirclePattern(4, logger);
+
+  page().add(circles[9]);
+  page().add(circles[10]);
+  page().add(circles[11]);
+
+  yield* waitUntil("Outer4");
+  yield* all(
+    ...circles.map((circle, index) => {
+      switch (index) {
+        case 0:
+          return circle.position(circle.position().add(dir(-25, -22)), 2, linear);
+        case 3:
+          return circle.position(circle.position().add(dir(-23, -22)), 2, linear);
+        case 6:
+          return circle.position(circle.position().add(dir(-19, -19)), 2, linear);
+        case 1:
+          return circle.position(circle.position().add(dir(33, -11)), 2, linear);
+        case 4:
+          return circle.position(circle.position().add(dir(32, -9)), 2, linear);
+        case 7:
+          return circle.position(circle.position().add(dir(26, -6)), 2, linear);
+        case 2:
+          return circle.position(circle.position().add(dir(-4, 36)), 2, linear);
+        case 5:
+          return circle.position(circle.position().add(dir(-8, 31)), 2, linear);
+        case 8:
+          return circle.position(circle.position().add(dir(-6, 26)), 2, linear);
+      }
+    }),
+    page().scale(diagonalScale(73.5), 2, linear),
+    page().position(pageDir(3.75, diagonalScale(73.5)), 2, linear),
+    delay(1, circles[9].animateOuterDotsFromCenter(0.5, true))
+  );
+
+  yield* waitUntil("Inner4");
+  if (!debug) {
+    yield* circles[9].animateInnerDots();
+  }
+
+  yield* waitUntil("Spread4");
+  yield* all(
+    circles[10].animateOuterDotsFromCenter(0),
+    circles[11].animateOuterDotsFromCenter(0)
+  );
+  if (!debug) {
+    yield* all(
+      circles[10].animateInnerDots(0),
+      circles[11].animateInnerDots(0)
+    );
+  }
+
+  yield* all(
+    circles[9].position(circles[9].position().add(dir(7, -26)), 2, linear),
+    circles[10].position(circles[10].position().add(dir(20, 20)), 2, linear),
+    circles[11].position(circles[11].position().add(dir(-26, 7)), 2, linear),
+    page().scale(diagonalScale(77.5), 2, linear),
+    page().position(pageDir(1.75, diagonalScale(77.5)), 2, linear)
+  );
+
+  yield* waitUntil("Rays4");
+  if (!debug) {
+    yield* all(
+      circles[9].animateRaysH(2),
+      circles[10].animateRaysD(2),
+      circles[11].animateRaysM(2)
+    );
+  }
   //#endregion
 
   yield* waitFor(5);
