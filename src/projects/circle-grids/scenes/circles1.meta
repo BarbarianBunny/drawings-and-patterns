@@ -64,6 +64,22 @@
     {
       "name": "Rays4",
       "targetTime": 61.30932454802566
+    },
+    {
+      "name": "Outer5",
+      "targetTime": 61.30932454802566
+    },
+    {
+      "name": "Inner5",
+      "targetTime": 67.3093245480255
+    },
+    {
+      "name": "Spread5",
+      "targetTime": 67.3093245480255
+    },
+    {
+      "name": "Rays5",
+      "targetTime": 80.83775167277146
     }
   ],
   "seed": 3201506818

@@ -288,5 +288,84 @@ export default makeScene2D(function* (view) {
   }
   //#endregion
 
+  //#region circles 5
+  circles[12] = new CirclePattern(5, logger);
+  circles[13] = new CirclePattern(5, logger);
+  circles[14] = new CirclePattern(5, logger);
+
+  page().add(circles[12]);
+  page().add(circles[13]);
+  page().add(circles[14]);
+
+  yield* waitUntil("Outer5");
+  yield* all(
+    ...circles.map((circle, index) => {
+      switch (index) {
+        case 0:
+          return circle.position(circle.position().add(dir(4, -60)), 2, linear);
+        case 3:
+          return circle.position(circle.position().add(dir(8, -57)), 2, linear);
+        case 6:
+          return circle.position(circle.position().add(dir(14, -49)), 2, linear);
+        case 9:
+          return circle.position(circle.position().add(dir(11, -39)), 2, linear);
+        case 1:
+          return circle.position(circle.position().add(dir(50, 32)), 2, linear);
+        case 4:
+          return circle.position(circle.position().add(dir(45, 36)), 2, linear);
+        case 7:
+          return circle.position(circle.position().add(dir(36, 36)), 2, linear);
+        case 10:
+          return circle.position(circle.position().add(dir(32, 32)), 2, linear);
+        case 2:
+          return circle.position(circle.position().add(dir(-51, 24)), 2, linear);
+        case 5:
+          return circle.position(circle.position().add(dir(-51, 20)), 2, linear);
+        case 8:
+          return circle.position(circle.position().add(dir(-48, 15)), 2, linear);
+        case 11:
+          return circle.position(circle.position().add(dir(-39, 11)), 2, linear);
+      }
+    }),
+    page().scale(diagonalScale(129), 2, linear),
+    page().position(pageDir(-4.5, diagonalScale(129)), 2, linear),
+    delay(1, circles[12].animateOuterDotsFromCenter(0.5, true))
+  );
+
+  yield* waitUntil("Inner5");
+  if (!debug) {
+    yield* circles[12].animateInnerDots();
+  }
+
+  yield* waitUntil("Spread5");
+  yield* all(
+    circles[13].animateOuterDotsFromCenter(0),
+    circles[14].animateOuterDotsFromCenter(0)
+  );
+  if (!debug) {
+    yield* all(
+      circles[13].animateInnerDots(0),
+      circles[14].animateInnerDots(0)
+    );
+  }
+
+  yield* all(
+    circles[12].position(circles[12].position().add(dir(42, -9)), 2, linear),
+    circles[13].position(circles[13].position().add(dir(-9, 42)), 2, linear),
+    circles[14].position(circles[14].position().add(dir(-30, -30)), 2, linear),
+    page().scale(diagonalScale(129), 2, linear),
+    page().position(pageDir(-4.5, diagonalScale(129)), 2, linear)
+  );
+
+  yield* waitUntil("Rays5");
+  if (!debug) {
+    yield* all(
+      circles[12].animateRaysH(2),
+      circles[13].animateRaysD(2),
+      circles[14].animateRaysM(2)
+    );
+  }
+  //#endregion
+
   yield* waitFor(5);
 });
