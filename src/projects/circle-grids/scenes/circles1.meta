@@ -7,79 +7,79 @@
     },
     {
       "name": "Inner1",
-      "targetTime": 1.5956160490404385
+      "targetTime": 1.3599999999999999
     },
     {
       "name": "Spread1",
-      "targetTime": 6.595616049040439
+      "targetTime": 1.3599999999999999
     },
     {
       "name": "Rays1",
-      "targetTime": 8.595616049040439
+      "targetTime": 3.36
     },
     {
       "name": "Outer2",
-      "targetTime": 12.595616049040439
+      "targetTime": 3.36
     },
     {
       "name": "Inner2",
-      "targetTime": 16.095616049040434
+      "targetTime": 6.859999999999994
     },
     {
       "name": "Spread2",
-      "targetTime": 24.095616049040405
+      "targetTime": 6.859999999999994
     },
     {
       "name": "Rays2",
-      "targetTime": 26.095616049040405
+      "targetTime": 8.859999999999994
     },
     {
       "name": "Outer3",
-      "targetTime": 30.095616049040405
+      "targetTime": 8.859999999999994
     },
     {
       "name": "Inner3",
-      "targetTime": 33.79561604904043
+      "targetTime": 13.259999999999986
     },
     {
       "name": "Spread3",
-      "targetTime": 41.79561604904055
+      "targetTime": 13.259999999999986
     },
     {
       "name": "Rays3",
-      "targetTime": 43.79561604904055
+      "targetTime": 15.259999999999986
     },
     {
       "name": "Outer4",
-      "targetTime": 47.98089742327928
+      "targetTime": 15.259999999999986
     },
     {
       "name": "Inner4",
-      "targetTime": 52.4808974232793
+      "targetTime": 20.46000000000003
     },
     {
       "name": "Spread4",
-      "targetTime": 59.30932454802566
+      "targetTime": 20.46000000000003
     },
     {
       "name": "Rays4",
-      "targetTime": 61.30932454802566
+      "targetTime": 22.46000000000003
     },
     {
       "name": "Outer5",
-      "targetTime": 61.30932454802566
+      "targetTime": 22.46000000000003
     },
     {
       "name": "Inner5",
-      "targetTime": 67.3093245480255
+      "targetTime": 28.46000000000009
     },
     {
       "name": "Spread5",
-      "targetTime": 67.3093245480255
+      "targetTime": 28.46000000000009
     },
     {
       "name": "Rays5",
-      "targetTime": 80.83775167277146
+      "targetTime": 30.46000000000009
     }
   ],
   "seed": 3201506818
